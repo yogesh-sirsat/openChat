@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "882457880753",
+    "firebase_url": "https://openchat-ys-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "openchat-ys",
+    "storage_bucket": "openchat-ys.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882457880753:android:7d8ba6164a682eb2ae9a90",
+        "android_client_info": {
+          "package_name": "com.example.openchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "882457880753-37pgmbda9gmabdlehq8fj69vr1qc48m4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.openchat",
+            "certificate_hash": "e0983a90a68f7a5a8c3d4a30fd835886d589492e"
+          }
+        },
+        {
+          "client_id": "882457880753-f4mltcfv5n7t0rf3h0itpoo5kdt6nk5s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiUAfawDMF3zwku-a4dDEfdQmUg-oN2ZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "882457880753-f4mltcfv5n7t0rf3h0itpoo5kdt6nk5s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
