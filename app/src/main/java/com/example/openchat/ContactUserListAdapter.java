@@ -12,9 +12,9 @@ import java.util.ArrayList;
 
 public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserListAdapter.ContactUserListViewHolder> {
 
-    ArrayList<UserObject> mContactUserList;
+    ArrayList<ContactUserObject> mContactUserList;
 
-    public ContactUserListAdapter(ArrayList<UserObject> ContactUserList) {
+    public ContactUserListAdapter(ArrayList<ContactUserObject> ContactUserList) {
         this.mContactUserList = ContactUserList;
     }
 

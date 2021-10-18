@@ -1,10 +1,10 @@
 package com.example.openchat;
 
-public class UserObject {
+public class ContactUserObject {
 
     private String name, phone;
 
-    public UserObject(String mName, String mPhone) {
+    public ContactUserObject(String mName, String mPhone) {
         this.name = mName;
         this.phone = mPhone;
     }
@@ -16,4 +16,9 @@ public class UserObject {
     public String getName() {
         return name;
     }
+
+    public void setName(String mName) {
+        this.name = mName;
+    }
+
 }
