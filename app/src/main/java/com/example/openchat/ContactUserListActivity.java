@@ -1,10 +1,10 @@
 package com.example.openchat;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,9 +24,7 @@ import java.util.Objects;
 public class ContactUserListActivity extends AppCompatActivity {
 
     ArrayList<ContactUserObject> userContactList, usersList;
-    private RecyclerView mContactUserList;
     private RecyclerView.Adapter mContactUserListAdapter;
-    private RecyclerView.LayoutManager mContactUserListLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +43,7 @@ public class ContactUserListActivity extends AppCompatActivity {
 
         String ISOPrefix = getCountryIso();
 
-        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+        @SuppressLint("Recycle") Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         while (phones.moveToNext()) {
             String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
             String phone = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
@@ -59,7 +57,7 @@ public class ContactUserListActivity extends AppCompatActivity {
                 phone = ISOPrefix + phone;
             }
 
-            ContactUserObject mContact = new ContactUserObject(name, phone);
+            ContactUserObject mContact = new ContactUserObject(name, phone, "");
             userContactList.add(mContact);
             getContactUserDetails(mContact);
         }
@@ -69,6 +67,7 @@ public class ContactUserListActivity extends AppCompatActivity {
         DatabaseReference mUserDB = FirebaseDatabase.getInstance("https://openchat-ys-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("user");
         Query query = mUserDB.orderByChild("phone").equalTo(mContact.getPhone());
         query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
@@ -80,27 +79,24 @@ public class ContactUserListActivity extends AppCompatActivity {
                         if (childSnapshot.child("name").getValue() != null) {
                             name = Objects.requireNonNull(childSnapshot.child("name").getValue()).toString();
                         }
-                    }
 
-                    ContactUserObject mUser = new ContactUserObject(name, phone);
+                        ContactUserObject mUser = new ContactUserObject(name, phone, childSnapshot.getKey());
 
-                    if (name.equals(phone)) {
-                        for (ContactUserObject mContactIterator : userContactList) {
-                            Log.d("ATTENTION!!! : ", "DEBUGGING WINDOW BELOW");
-                            Log.d("mUser NAME : ", name);
-                            Log.d("mUser PHONE : ", phone);
-                            Log.d("NAME : ", mContactIterator.getName());
-                            Log.d("PHONE : ", mContactIterator.getPhone());
-                            if (mContactIterator.getPhone().equals(mUser.getPhone())) {
-                                mUser.setName(mContactIterator.getName());
-                                break;
+                        if (name.equals(phone)) {
+                            for (ContactUserObject mContactIterator : userContactList) {
+
+                                if (mContactIterator.getPhone().equals(mUser.getPhone())) {
+                                    mUser.setName(mContactIterator.getName());
+                                    break;
+                                }
                             }
                         }
+
+                        usersList.add(mUser);
+
+                        mContactUserListAdapter.notifyDataSetChanged();
                     }
 
-                    usersList.add(mUser);
-
-                    mContactUserListAdapter.notifyDataSetChanged();
 
                 }
             }
@@ -115,7 +111,8 @@ public class ContactUserListActivity extends AppCompatActivity {
     private String getCountryIso() {
         String iso = "IN";
 
-        TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(getApplicationContext().TELEPHONY_SERVICE);
+        getApplicationContext();
+        TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(TELEPHONY_SERVICE);
         if (telephonyManager.getNetworkCountryIso() != null) {
             if (telephonyManager.getNetworkCountryIso().equals("")) {
                 iso = telephonyManager.getNetworkCountryIso();
@@ -126,10 +123,10 @@ public class ContactUserListActivity extends AppCompatActivity {
     }
 
     private void initializeRecyclerView() {
-        mContactUserList = findViewById(R.id.contactUserList);
+        RecyclerView mContactUserList = findViewById(R.id.contactUserList);
         mContactUserList.setNestedScrollingEnabled(false);
         mContactUserList.setHasFixedSize(false);
-        mContactUserListLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false);
+        RecyclerView.LayoutManager mContactUserListLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false);
         mContactUserList.setLayoutManager(mContactUserListLayoutManager);
         mContactUserListAdapter = new ContactUserListAdapter(usersList);
         mContactUserList.setAdapter(mContactUserListAdapter);
