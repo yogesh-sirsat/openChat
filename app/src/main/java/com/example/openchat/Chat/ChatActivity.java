@@ -1,5 +1,6 @@
 package com.example.openchat.Chat;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,29 +26,14 @@ import java.util.Objects;
 
 public class ChatActivity extends AppCompatActivity {
 
-    RecyclerView mChat;
+    RecyclerView mChat, mMedia;
     ArrayList<MessageObject> mMessageList;
-    RecyclerView.Adapter mChatAdapter;
-    RecyclerView.LayoutManager mChatLayoutManager;
+    RecyclerView.Adapter mChatAdapter, mMediaAdapter;
+    RecyclerView.LayoutManager mChatLayoutManager, mMediaLayoutManager;
     String chatId;
     DatabaseReference mChatDb;
+    int PICK_IMAGE_INTENT = 1;
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
-
-        chatId = getIntent().getExtras().getString("chatID");
-
-        mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
-
-        Button mSend = findViewById(R.id.send);
-        mSend.setOnClickListener(v -> sendMessage());
-
-        initializeRecyclerView();
-        getChatMessages();
-    }
 
     private void getChatMessages() {
         mChatDb.addChildEventListener(new ChildEventListener() {
@@ -106,7 +92,29 @@ public class ChatActivity extends AppCompatActivity {
         mMessage.setText(null);
     }
 
-    private void initializeRecyclerView() {
+    ArrayList<String> mediaUriList = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_chat);
+
+        chatId = getIntent().getExtras().getString("chatID");
+
+        mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
+
+        Button mSend = findViewById(R.id.send);
+        mSend.setOnClickListener(v -> sendMessage());
+
+        Button mAddMedia = findViewById(R.id.addMedia);
+        mAddMedia.setOnClickListener(v -> openGallery());
+
+        initializeMessage();
+        initializeMedia();
+        getChatMessages();
+    }
+
+    private void initializeMessage() {
         mMessageList = new ArrayList<>();
         mChat = findViewById(R.id.messageList);
         mChat.setNestedScrollingEnabled(false);
@@ -115,5 +123,41 @@ public class ChatActivity extends AppCompatActivity {
         mChat.setLayoutManager(mChatLayoutManager);
         mChatAdapter = new MessageAdapter(mMessageList);
         mChat.setAdapter(mChatAdapter);
+    }
+
+    private void initializeMedia() {
+        mMedia = findViewById(R.id.mediaList);
+        mMedia.setNestedScrollingEnabled(false);
+        mMedia.setHasFixedSize(false);
+        mMediaLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false);
+        mMedia.setLayoutManager(mMediaLayoutManager);
+        mMediaAdapter = new MediaAdapter(getApplicationContext(), mediaUriList);
+        mMedia.setAdapter(mMediaAdapter);
+    }
+
+    private void openGallery() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setAction(intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture(s)"), PICK_IMAGE_INTENT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == PICK_IMAGE_INTENT) {
+                if (data.getClipData() == null) {
+                    mediaUriList.add(data.getData().toString());
+                } else {
+                    for (int i = 0; i < data.getClipData().getItemCount(); i++) {
+                        mediaUriList.add(data.getClipData().getItemAt(i).getUri().toString());
+                    }
+                }
+
+                mMediaAdapter.notifyDataSetChanged();
+            }
+        }
     }
 }
