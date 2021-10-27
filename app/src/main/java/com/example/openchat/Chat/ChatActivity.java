@@ -1,6 +1,7 @@
 package com.example.openchat.Chat;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,12 +13,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openchat.R;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,12 +33,37 @@ public class ChatActivity extends AppCompatActivity {
 
     RecyclerView mChat, mMedia;
     ArrayList<MessageObject> mMessageList;
+    ArrayList<String> mediaUriList = new ArrayList<>();
     RecyclerView.Adapter mChatAdapter, mMediaAdapter;
     RecyclerView.LayoutManager mChatLayoutManager, mMediaLayoutManager;
     String chatId;
     DatabaseReference mChatDb;
     int PICK_IMAGE_INTENT = 1;
 
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_chat);
+
+        chatId = getIntent().getExtras().getString("chatID");
+
+        mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
+
+        Button mSend = findViewById(R.id.send);
+        mSend.setOnClickListener(v -> sendMessage());
+
+        Button mAddMedia = findViewById(R.id.addMedia);
+        mAddMedia.setOnClickListener(v -> openGallery());
+
+        initializeMessage();
+        initializeMedia();
+        getChatMessages();
+    }
+
+    ArrayList<String> mediaIdList = new ArrayList<>();
+    int totalMediaUploaded = 0;
+    EditText mMessage;
 
     private void getChatMessages() {
         mChatDb.addChildEventListener(new ChildEventListener() {
@@ -78,40 +108,57 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
-        EditText mMessage = findViewById(R.id.messageToSend);
+        mMessage = findViewById(R.id.messageToSend);
+
+        final Map newMessageMap = new HashMap<>();
+        String messageId = mChatDb.push().getKey();
+        DatabaseReference newMessageDb = mChatDb.child(messageId);
+        newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
 
         if (!mMessage.getText().toString().isEmpty()) {
-            DatabaseReference newMessageDb = mChatDb.push();
 
-            Map newMessageMap = new HashMap<>();
             newMessageMap.put("text", mMessage.getText().toString());
-            newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
-
-            newMessageDb.updateChildren(newMessageMap);
         }
-        mMessage.setText(null);
+
+        if (!mediaUriList.isEmpty()) {
+            for (String mediaUri : mediaUriList) {
+                String mediaId = newMessageDb.child("media").push().getKey();
+                mediaIdList.add(mediaId);
+                final StorageReference filePath = FirebaseStorage.getInstance().getReference().child("chat").child(chatId).child(messageId).child(mediaId);
+
+                UploadTask uploadTask = filePath.putFile(Uri.parse(mediaUri));
+                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                newMessageMap.put("/media/" + mediaIdList.get(totalMediaUploaded) + "/", uri.toString());
+
+                                totalMediaUploaded++;
+                                if (totalMediaUploaded == mediaUriList.size()) {
+                                    updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
+                                }
+
+                            }
+                        });
+                    }
+                });
+            }
+        } else {
+            if (!mMessage.getText().toString().isEmpty()) {
+                updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
+            }
+        }
     }
 
-    ArrayList<String> mediaUriList = new ArrayList<>();
+    private void updateDatabaseWithNewMessage(DatabaseReference newMessageDb, Map newMessageMap) {
+        newMessageDb.updateChildren(newMessageMap);
+        mMessage.setText(null);
+        mediaUriList.clear();
+        mediaIdList.clear();
+        mMediaAdapter.notifyDataSetChanged();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
-
-        chatId = getIntent().getExtras().getString("chatID");
-
-        mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
-
-        Button mSend = findViewById(R.id.send);
-        mSend.setOnClickListener(v -> sendMessage());
-
-        Button mAddMedia = findViewById(R.id.addMedia);
-        mAddMedia.setOnClickListener(v -> openGallery());
-
-        initializeMessage();
-        initializeMedia();
-        getChatMessages();
     }
 
     private void initializeMessage() {
@@ -123,9 +170,11 @@ public class ChatActivity extends AppCompatActivity {
         mChat.setLayoutManager(mChatLayoutManager);
         mChatAdapter = new MessageAdapter(mMessageList);
         mChat.setAdapter(mChatAdapter);
+
     }
 
     private void initializeMedia() {
+        mediaUriList = new ArrayList<>();
         mMedia = findViewById(R.id.mediaList);
         mMedia.setNestedScrollingEnabled(false);
         mMedia.setHasFixedSize(false);
