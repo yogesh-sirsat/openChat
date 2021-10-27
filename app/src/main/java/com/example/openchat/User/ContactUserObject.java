@@ -1,4 +1,4 @@
-package com.example.openchat;
+package com.example.openchat.User;
 
 public class ContactUserObject {
 

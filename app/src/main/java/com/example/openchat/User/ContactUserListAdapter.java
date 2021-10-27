@@ -1,4 +1,4 @@
-package com.example.openchat;
+package com.example.openchat.User;
 
 import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openchat.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 

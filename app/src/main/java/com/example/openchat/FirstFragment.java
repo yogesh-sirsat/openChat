@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openchat.Chat.ChatListAdapter;
 import com.example.openchat.Chat.ChatObject;
+import com.example.openchat.User.ContactUserListActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;

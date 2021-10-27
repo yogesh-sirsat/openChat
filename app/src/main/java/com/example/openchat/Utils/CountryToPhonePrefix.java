@@ -1,4 +1,4 @@
-package com.example.openchat;
+package com.example.openchat.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
