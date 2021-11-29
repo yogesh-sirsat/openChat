@@ -44,6 +44,8 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         setContentView(R.layout.activity_chat);
 
         chatId = getIntent().getExtras().getString("chatID");
@@ -60,6 +62,7 @@ public class ChatActivity extends AppCompatActivity {
         initializeMedia();
         getChatMessages();
     }
+
 
     ArrayList<String> mediaIdList = new ArrayList<>();
     int totalMediaUploaded = 0;

@@ -1,5 +1,6 @@
 package com.example.openchat;
 
+
 import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
@@ -20,8 +21,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
-
-
+//    private static final String ONESIGNAL_APP_ID = "5e9cf109-2422-458e-99e9-e15c1418e3ee";
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
 
@@ -29,6 +29,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        // Enable verbose OneSignal logging to debug issues if needed.
+//        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE);
+//
+//        // OneSignal Initialization
+//        OneSignal.initWithContext(this);
+//        OneSignal.setAppId(ONESIGNAL_APP_ID);
+
+
         Fresco.initialize(this);
         setContentView(R.layout.activity_main);
 
@@ -69,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getTitle().equals("Log Out")) {
+
             Toast.makeText(getApplicationContext(), "You Are Logged Out", Toast.LENGTH_LONG).show();
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(getApplicationContext(), AuthActivity.class);

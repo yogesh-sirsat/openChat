@@ -70,13 +70,13 @@ public class FirstFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                         ChatObject mChat = new ChatObject(childSnapshot.getKey());
-                        boolean exits = false;
+                        boolean exists = false;
                         for (ChatObject chatObjectIt : chatList) {
                             if (chatObjectIt.getChatId().equals(mChat.getChatId())) {
-                                exits = true;
+                                exists = true;
                             }
                         }
-                        if (exits) continue;
+                        if (exists == true) continue;
                         chatList.add(mChat);
                         mChatListAdapter.notifyDataSetChanged();
                     }
