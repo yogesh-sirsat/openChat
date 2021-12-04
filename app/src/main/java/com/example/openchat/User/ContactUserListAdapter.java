@@ -28,7 +28,6 @@ import java.util.Objects;
 public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserListAdapter.ContactUserListViewHolder> {
 
     ArrayList<ContactUserObject> mContactUserList;
-    public boolean chatCreated = false;
     HashMap<String, Integer> authUserChatDB;
 
 
@@ -52,10 +51,10 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
         holder.mPhone.setText(mContactUserList.get(position).getPhone());
         holder.mLayout.setOnClickListener(v -> {
             authUserChatDB = new HashMap<>();
-            DatabaseReference authUserChatKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat");
+            DatabaseReference authUserChat = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat");
 
 
-            authUserChatKey.addValueEventListener(new ValueEventListener() {
+            authUserChat.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     Log.e("Count ", "" + snapshot.getChildrenCount());
@@ -80,27 +79,33 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
             });
 
 
-            DatabaseReference thirdUsedChatKey = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).child("chat");
+            DatabaseReference thirdUserChat = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).child("chat");
 
-            thirdUsedChatKey.addValueEventListener(new ValueEventListener() {
+            thirdUserChat.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
 
                     for (DataSnapshot childSnapShot : snapshot.getChildren()) {
                         if (authUserChatDB.containsKey(childSnapShot.getKey())) {
-
-                            Toast.makeText(v.getContext(), "Chat Already Created!!", Toast.LENGTH_SHORT).show();
-
+                            Toast.makeText(v.getContext(), "Chat Is Ready!!", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
                     }
                     String key = FirebaseDatabase.getInstance().getReference().child("chat").push().getKey();
+                    String authUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+                    String thirdUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).getKey();
 
-                    FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat").child(key).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).child("chat").child(key).setValue(true);
+                    assert key != null;
+                    FirebaseDatabase.getInstance().getReference().child("chat").child(key).child("users").child(authUserKey).setValue(true);
+                    FirebaseDatabase.getInstance().getReference().child("chat").child(key).child("users").child(thirdUserKey).setValue(true);
+
+                    authUserChat.child(key).setValue(true);
+                    thirdUserChat.child(key).setValue(true);
+                    FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).child("name").setValue((String) holder.mName.getText());
 
                     Toast.makeText(v.getContext(), "Chat Created!!", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
                 @Override

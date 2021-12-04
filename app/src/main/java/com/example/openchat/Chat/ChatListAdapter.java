@@ -1,5 +1,6 @@
 package com.example.openchat.Chat;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -34,11 +35,14 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
         return ChatListViewHolder;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(@NonNull final ChatListViewHolder holder, int position) {
-        holder.mTitle.setText(mChatList.get(position).getChatId());
+    public void onBindViewHolder(@NonNull final ChatListViewHolder holder, @SuppressLint("RecyclerView") int position) {
+        holder.mTitle.setText("" + position + " " + mChatList.get(position).getName());
+
 
         holder.mLayout.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), ChatActivity.class);

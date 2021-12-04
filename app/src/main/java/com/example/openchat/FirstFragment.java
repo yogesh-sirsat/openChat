@@ -30,7 +30,10 @@ import java.util.Objects;
 public class FirstFragment extends Fragment {
 
     ArrayList<ChatObject> chatList;
-
+    private int position = 0;
+    private ArrayList<String> chatMemList = new ArrayList<>();
+    private ChatObject mChat;
+    private String chatMemName = "", chatMemPhone = "";
     private RecyclerView.Adapter mChatListAdapter;
 
     private View fragmentView;
@@ -62,25 +65,60 @@ public class FirstFragment extends Fragment {
 
     private void getUserChatList() {
         DatabaseReference mUserChatDB = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat");
+        DatabaseReference chatDB = FirebaseDatabase.getInstance().getReference().child("chat");
+        String authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+
 
         mUserChatDB.addListenerForSingleValueEvent(new ValueEventListener() {
-            @SuppressLint("NotifyDataSetChanged")
+            @SuppressLint("notifyDataSetChanged")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
-                        ChatObject mChat = new ChatObject(childSnapshot.getKey());
                         boolean exists = false;
                         for (ChatObject chatObjectIt : chatList) {
-                            if (chatObjectIt.getChatId().equals(mChat.getChatId())) {
+                            if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
                                 exists = true;
                             }
                         }
-                        if (exists == true) continue;
+                        if (exists) continue;
+
+                        DatabaseReference chatsUserDB = chatDB.child(childSnapshot.getKey()).child("users");
+
+                        mChat = new ChatObject(childSnapshot.getKey(), "", "");
                         chatList.add(mChat);
-                        mChatListAdapter.notifyDataSetChanged();
+
+                        chatsUserDB.addValueEventListener(new ValueEventListener() {
+
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                                if (snapshot.exists()) {
+                                    for (DataSnapshot chatSnapshot : snapshot.getChildren()) {
+                                        if (!chatSnapshot.getKey().equals(authUserUid)) {
+                                            chatMemList.add(chatSnapshot.getKey());
+
+
+                                        }
+                                    }
+                                    getNamePhoneOfChatMem();
+
+                                }
+
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+
+                        });
+
+
                     }
                 }
+
+
             }
 
             @Override
@@ -88,6 +126,44 @@ public class FirstFragment extends Fragment {
 
             }
         });
+    }
+
+    private void getNamePhoneOfChatMem() {
+
+        for (int ind = position; ind < chatMemList.size(); ind++) {
+
+
+            DatabaseReference chatMemDb = FirebaseDatabase.getInstance().getReference().child("user").child(chatMemList.get(ind));
+
+            int finalInd = ind;
+            chatMemDb.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot chatMemSnapshot) {
+
+                    chatMemName = chatMemSnapshot.child("name").getValue().toString();
+                    chatMemPhone = chatMemSnapshot.child("phone").getValue().toString();
+
+
+                    //getting name and phone of user's chat member's from database
+
+
+                    chatList.get(finalInd).setName(chatMemName);
+                    chatList.get(finalInd).setPhone(chatMemPhone);
+
+                    mChatListAdapter.notifyDataSetChanged();
+
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
+            position++;
+
+        }
     }
 
     private void initializeRecyclerView() {
