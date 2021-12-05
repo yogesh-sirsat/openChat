@@ -84,7 +84,7 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
             thirdUserChat.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-
+                    Log.e("second addvaluelistener", "calling here");
                     for (DataSnapshot childSnapShot : snapshot.getChildren()) {
                         if (authUserChatDB.containsKey(childSnapShot.getKey())) {
                             Toast.makeText(v.getContext(), "Chat Is Ready!!", Toast.LENGTH_SHORT).show();

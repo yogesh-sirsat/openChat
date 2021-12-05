@@ -35,7 +35,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final MessageViewHolder holder, final int position) {
         holder.mMessage.setText(mMessageList.get(position).getMessage());
         holder.mSender.setText(mMessageList.get(position).getSenderId());
         if (mMessageList.get(holder.getAdapterPosition()).getMediaUrlList().isEmpty()) {

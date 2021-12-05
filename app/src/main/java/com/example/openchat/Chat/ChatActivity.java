@@ -1,8 +1,10 @@
 package com.example.openchat.Chat;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -20,6 +22,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -41,6 +44,12 @@ public class ChatActivity extends AppCompatActivity {
     int PICK_IMAGE_INTENT = 1;
 
 
+    int totalMediaUploaded = 0;
+
+
+    ArrayList<String> mediaIdList = new ArrayList<>();
+    EditText mMessage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,39 +67,60 @@ public class ChatActivity extends AppCompatActivity {
         Button mAddMedia = findViewById(R.id.addMedia);
         mAddMedia.setOnClickListener(v -> openGallery());
 
+
         initializeMessage();
         initializeMedia();
         getChatMessages();
     }
 
-
-    ArrayList<String> mediaIdList = new ArrayList<>();
-    int totalMediaUploaded = 0;
-    EditText mMessage;
-
     private void getChatMessages() {
+
+        String authUser = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
         mChatDb.addChildEventListener(new ChildEventListener() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
                 if (dataSnapshot.exists()) {
-                    String text = "", creatorID = "";
+                    String text = "";
+                    final String[] creatorID = {""};
                     ArrayList<String> mediaUrlList = new ArrayList<>();
                     if (dataSnapshot.child("text").getValue() != null) {
                         text = Objects.requireNonNull(dataSnapshot.child("text").getValue()).toString();
                     }
                     if (dataSnapshot.child("creator").getValue() != null) {
-                        creatorID = Objects.requireNonNull(dataSnapshot.child("creator").getValue()).toString();
+                        creatorID[0] = Objects.requireNonNull(dataSnapshot.child("creator").getValue()).toString();
+
+                        if (creatorID[0].equals(authUser)) {
+                            creatorID[0] = "You";
+                        } else {
+                            DatabaseReference chatPersonRef = FirebaseDatabase.getInstance().getReference().child("user").child(creatorID[0]);
+                            chatPersonRef.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    creatorID[0] = snapshot.child("name").getValue().toString();
+
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            });
+                        }
                     }
                     if (dataSnapshot.child("media").getChildrenCount() > 0) {
                         for (DataSnapshot mediaSnapshot : dataSnapshot.child("media").getChildren()) {
-                            mediaUrlList.add(mediaSnapshot.getValue().toString());
+                            mediaUrlList.add(Objects.requireNonNull(mediaSnapshot.getValue()).toString());
                         }
                     }
 
-                    MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList);
-                    mMessageList.add(mMessage);
-                    mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
-                    mChatAdapter.notifyDataSetChanged();
+                    if (text.length() != 0 && creatorID[0].length() != 0) {
+                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID[0], text, mediaUrlList);
+                        mMessageList.add(mMessage);
+                        mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
+                        mChatAdapter.notifyDataSetChanged();
+                    }
+
                 }
             }
 
@@ -117,11 +147,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
+
         mMessage = findViewById(R.id.messageToSend);
+        String messageId = mChatDb.push().getKey();
+        final DatabaseReference newMessageDb = mChatDb.child(messageId);
 
         final Map newMessageMap = new HashMap<>();
-        String messageId = mChatDb.push().getKey();
-        DatabaseReference newMessageDb = mChatDb.child(messageId);
         newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
 
         if (!mMessage.getText().toString().isEmpty()) {
@@ -162,15 +193,20 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void updateDatabaseWithNewMessage(DatabaseReference newMessageDb, Map newMessageMap) {
+
         newMessageDb.updateChildren(newMessageMap);
         mMessage.setText(null);
         mediaUriList.clear();
         mediaIdList.clear();
+        totalMediaUploaded = 0;
+
         mMediaAdapter.notifyDataSetChanged();
+
 
     }
 
     private void initializeMessage() {
+
         mMessageList = new ArrayList<>();
         mChat = findViewById(R.id.messageList);
         mChat.setNestedScrollingEnabled(false);
@@ -183,6 +219,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initializeMedia() {
+
         mediaUriList = new ArrayList<>();
         mMedia = findViewById(R.id.mediaList);
         mMedia.setNestedScrollingEnabled(false);
@@ -203,6 +240,8 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Log.e("onActivityResult", "called here!!");
+
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == PICK_IMAGE_INTENT) {

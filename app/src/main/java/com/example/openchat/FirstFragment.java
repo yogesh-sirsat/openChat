@@ -146,7 +146,7 @@ public class FirstFragment extends Fragment {
 
                     //getting name and phone of user's chat member's from database
 
-
+                    if (chatMemName.length() == 0) chatMemName = chatMemPhone;
                     chatList.get(finalInd).setName(chatMemName);
                     chatList.get(finalInd).setPhone(chatMemPhone);
 
