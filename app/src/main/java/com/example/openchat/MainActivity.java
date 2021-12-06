@@ -1,9 +1,7 @@
 package com.example.openchat;
 
 
-import android.Manifest;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -65,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }).attach();
 
-        getPermissions();
 
     }
 
@@ -90,12 +87,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Settings Is Under Development", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void getPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS, Manifest.permission.READ_CONTACTS}, 1);
-        }
     }
 
 

@@ -1,6 +1,8 @@
 package com.example.openchat.Auth;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -85,6 +87,8 @@ public class AuthActivity extends AppCompatActivity {
             }
         };
 
+        getPermissions();
+
     }
 
     private void verifyPhoneNumberWithCode() {
@@ -145,5 +149,11 @@ public class AuthActivity extends AppCompatActivity {
                 TimeUnit.SECONDS,
                 this,
                 mCallbacks);
+    }
+
+    private void getPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS, Manifest.permission.READ_CONTACTS}, 1);
+        }
     }
 }
