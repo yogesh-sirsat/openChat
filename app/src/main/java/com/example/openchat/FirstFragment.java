@@ -3,6 +3,7 @@ package com.example.openchat;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +36,6 @@ public class FirstFragment extends Fragment {
     private ChatObject mChat;
     private String chatMemName = "", chatMemPhone = "";
     private RecyclerView.Adapter mChatListAdapter;
-
     private View fragmentView;
 
     @Override
@@ -43,10 +43,12 @@ public class FirstFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
+        Log.e("firstFragment Called", "here!!");
+        fragmentView = inflater.inflate(R.layout.fragment_first, container, false);
+
 
         FloatingActionButton mContactUserList;
 
-        fragmentView = inflater.inflate(R.layout.fragment_first, container, false);
 
         mContactUserList = fragmentView.findViewById(R.id.contactUserListView);
 
@@ -86,7 +88,6 @@ public class FirstFragment extends Fragment {
                         DatabaseReference chatsUserDB = chatDB.child(childSnapshot.getKey()).child("users");
 
                         mChat = new ChatObject(childSnapshot.getKey(), "", "");
-                        chatList.add(mChat);
 
                         chatsUserDB.addValueEventListener(new ValueEventListener() {
 
@@ -97,13 +98,22 @@ public class FirstFragment extends Fragment {
                                     for (DataSnapshot chatSnapshot : snapshot.getChildren()) {
                                         if (!chatSnapshot.getKey().equals(authUserUid)) {
                                             chatMemList.add(chatSnapshot.getKey());
+                                            chatMemName = chatSnapshot.child("name").getValue().toString();
+                                            chatMemPhone = chatSnapshot.child("phone").getValue().toString();
+
+                                            if (chatMemName.length() == 0)
+                                                chatMemName = chatMemPhone;
 
 
                                         }
                                     }
-                                    getNamePhoneOfChatMem();
+
 
                                 }
+                                mChat.setName(chatMemName);
+                                mChat.setPhone(chatMemPhone);
+                                chatList.add(mChat);
+                                mChatListAdapter.notifyDataSetChanged();
 
                             }
 
@@ -128,43 +138,43 @@ public class FirstFragment extends Fragment {
         });
     }
 
-    private void getNamePhoneOfChatMem() {
-
-        for (int ind = position; ind < chatMemList.size(); ind++) {
-
-
-            DatabaseReference chatMemDb = FirebaseDatabase.getInstance().getReference().child("user").child(chatMemList.get(ind));
-
-            int finalInd = ind;
-            chatMemDb.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot chatMemSnapshot) {
-
-                    chatMemName = chatMemSnapshot.child("name").getValue().toString();
-                    chatMemPhone = chatMemSnapshot.child("phone").getValue().toString();
-
-
-                    //getting name and phone of user's chat member's from database
-
-                    if (chatMemName.length() == 0) chatMemName = chatMemPhone;
-                    chatList.get(finalInd).setName(chatMemName);
-                    chatList.get(finalInd).setPhone(chatMemPhone);
-
-                    mChatListAdapter.notifyDataSetChanged();
-
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-
-            position++;
-
-        }
-    }
+//    private void getNamePhoneOfChatMem() {
+//
+//        for (int ind = position; ind < chatMemList.size(); ind++) {
+//
+//
+//            DatabaseReference chatMemDb = FirebaseDatabase.getInstance().getReference().child("user").child(chatMemList.get(ind));
+//
+//            int finalInd = ind;
+//            chatMemDb.addValueEventListener(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot chatMemSnapshot) {
+//
+//                    chatMemName = chatMemSnapshot.child("name").getValue().toString();
+//                    chatMemPhone = chatMemSnapshot.child("phone").getValue().toString();
+//
+//
+//                    //getting name and phone of user's chat member's from database
+//
+//                    if (chatMemName.length() == 0) chatMemName = chatMemPhone;
+//                    chatList.get(finalInd).setName(chatMemName);
+//                    chatList.get(finalInd).setPhone(chatMemPhone);
+//
+//                    mChatListAdapter.notifyDataSetChanged();
+//
+//
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError error) {
+//
+//                }
+//            });
+//
+//            position++;
+//
+//        }
+//    }
 
     private void initializeRecyclerView() {
         chatList = new ArrayList<>();
@@ -177,4 +187,6 @@ public class FirstFragment extends Fragment {
         mChatList.setAdapter(mChatListAdapter);
     }
 
+
 }
+

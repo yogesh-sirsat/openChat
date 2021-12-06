@@ -5,14 +5,18 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
+import android.util.Log;
+import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openchat.R;
 import com.example.openchat.Utils.CountryToPhonePrefix;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,6 +36,15 @@ public class ContactUserListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_user_list);
+
+        // calling the action bar
+        ActionBar actionBar = getSupportActionBar();
+
+        // Customize the back button
+//        actionBar.setHomeAsUpIndicator(R.drawable.mybutton);
+
+        // showing the back button in action bar
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         userContactList = new ArrayList<>();
         usersList = new ArrayList<>();
@@ -67,6 +80,7 @@ public class ContactUserListActivity extends AppCompatActivity {
 
     private void getContactUserDetails(ContactUserObject mContact) {
         DatabaseReference mUserDB = FirebaseDatabase.getInstance("https://openchat-ys-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("user");
+        String authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
         Query query = mUserDB.orderByChild("phone").equalTo(mContact.getPhone());
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @SuppressLint("NotifyDataSetChanged")
@@ -74,7 +88,10 @@ public class ContactUserListActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     String phone = "", name = "";
+                    Log.e("authUserkey : ", authUserUid);
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                        Log.e("chatMemKey : ", childSnapshot.getKey());
+                        if (authUserUid.equals(childSnapshot.getKey())) continue;
                         if (childSnapshot.child("phone").getValue() != null) {
                             phone = Objects.requireNonNull(childSnapshot.child("phone").getValue()).toString();
                         }
@@ -132,5 +149,17 @@ public class ContactUserListActivity extends AppCompatActivity {
         mContactUserList.setLayoutManager(mContactUserListLayoutManager);
         mContactUserListAdapter = new ContactUserListAdapter(usersList);
         mContactUserList.setAdapter(mContactUserListAdapter);
+    }
+
+    // this event will enable the back
+    // function to the button on press
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

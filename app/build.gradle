@@ -65,6 +65,11 @@ dependencies {
     implementation 'com.github.stfalcon:frescoimageviewer:0.5.0'
     implementation 'com.facebook.fresco:fresco:2.6.0'
 
+    //swipe-down reload library
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+
+
 
 
 

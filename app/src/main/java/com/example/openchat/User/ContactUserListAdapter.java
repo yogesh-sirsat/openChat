@@ -1,17 +1,19 @@
 package com.example.openchat.User;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openchat.Chat.ChatActivity;
 import com.example.openchat.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -29,6 +31,8 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
 
     ArrayList<ContactUserObject> mContactUserList;
     HashMap<String, Integer> authUserChatDB;
+    Boolean chatKeyExists = false;
+    String chatKey;
 
 
     public ContactUserListAdapter(ArrayList<ContactUserObject> ContactUserList) {
@@ -49,6 +53,7 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
     public void onBindViewHolder(@NonNull ContactUserListViewHolder holder, @SuppressLint("RecyclerView") int position) {
         holder.mName.setText(mContactUserList.get(position).getName());
         holder.mPhone.setText(mContactUserList.get(position).getPhone());
+
         holder.mLayout.setOnClickListener(v -> {
             authUserChatDB = new HashMap<>();
             DatabaseReference authUserChat = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat");
@@ -87,25 +92,37 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
                     Log.e("second addvaluelistener", "calling here");
                     for (DataSnapshot childSnapShot : snapshot.getChildren()) {
                         if (authUserChatDB.containsKey(childSnapShot.getKey())) {
-                            Toast.makeText(v.getContext(), "Chat Is Ready!!", Toast.LENGTH_SHORT).show();
-                            return;
+                            chatKeyExists = true;
+                            chatKey = childSnapShot.getKey();
+                            break;
                         }
 
                     }
-                    String key = FirebaseDatabase.getInstance().getReference().child("chat").push().getKey();
-                    String authUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
-                    String thirdUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).getKey();
+                    if (!chatKeyExists) {
+                        chatKey = FirebaseDatabase.getInstance().getReference().child("chat").push().getKey();
+                        String authUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+                        String thirdUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).getKey();
 
-                    assert key != null;
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(key).child("users").child(authUserKey).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(key).child("users").child(thirdUserKey).setValue(true);
+                        assert chatKey != null;
+                        FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(authUserKey).setValue(true);
+                        FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(thirdUserKey).setValue(true);
 
-                    authUserChat.child(key).setValue(true);
-                    thirdUserChat.child(key).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).child("name").setValue((String) holder.mName.getText());
+                        authUserChat.child(chatKey).setValue(true);
+                        thirdUserChat.child(chatKey).setValue(true);
+                        FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(thirdUserKey).child("name").setValue((String) holder.mName.getText());
+                        FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(thirdUserKey).child("phone").setValue((String) holder.mPhone.getText());
 
-                    Toast.makeText(v.getContext(), "Chat Created!!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    Intent intent = new Intent(v.getContext(), ChatActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("chatID", chatKey);
+                    intent.putExtras(bundle);
+                    v.getContext().startActivity(intent);
+
                     return;
+
+
                 }
 
                 @Override
