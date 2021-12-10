@@ -2,6 +2,7 @@ package com.example.openchat;
 
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -9,6 +10,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager2.widget.ViewPager2;
@@ -20,11 +22,12 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
-//    private static final String ONESIGNAL_APP_ID = "5e9cf109-2422-458e-99e9-e15c1418e3ee";
+    //    private static final String ONESIGNAL_APP_ID = "5e9cf109-2422-458e-99e9-e15c1418e3ee";
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,10 +40,14 @@ public class MainActivity extends AppCompatActivity {
 //        OneSignal.setAppId(ONESIGNAL_APP_ID);
 
 
+        //getting cantact list
+
+
         Fresco.initialize(this);
+        //        UserContactList.contactList();
         setContentView(R.layout.activity_main);
 
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(fragmentManager, getLifecycle());
@@ -65,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

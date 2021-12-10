@@ -2,6 +2,7 @@ package com.example.openchat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,22 +35,22 @@ public class FirstFragment extends Fragment {
     ArrayList<ChatObject> chatList;
     private int position = 0;
     private ArrayList<String> chatMemList = new ArrayList<>();
-    private ChatObject mChat;
     private String chatMemName = "", chatMemPhone = "";
     private RecyclerView.Adapter mChatListAdapter;
     private View fragmentView;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-        Log.e("firstFragment Called", "here!!");
         fragmentView = inflater.inflate(R.layout.fragment_first, container, false);
 
 
         FloatingActionButton mContactUserList;
 
+        Log.e("firstFragment Called", "here!!");
 
         mContactUserList = fragmentView.findViewById(R.id.contactUserListView);
 
@@ -70,12 +72,12 @@ public class FirstFragment extends Fragment {
         DatabaseReference chatDB = FirebaseDatabase.getInstance().getReference().child("chat");
         String authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
 
-
         mUserChatDB.addListenerForSingleValueEvent(new ValueEventListener() {
-            @SuppressLint("notifyDataSetChanged")
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
+                    Log.e("user chat count : ", "" + dataSnapshot.getChildrenCount());
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                         boolean exists = false;
                         for (ChatObject chatObjectIt : chatList) {
@@ -87,7 +89,7 @@ public class FirstFragment extends Fragment {
 
                         DatabaseReference chatsUserDB = chatDB.child(childSnapshot.getKey()).child("users");
 
-                        mChat = new ChatObject(childSnapshot.getKey(), "", "");
+                        ChatObject mChat = new ChatObject(childSnapshot.getKey(), "", "");
 
                         chatsUserDB.addValueEventListener(new ValueEventListener() {
 
@@ -104,16 +106,18 @@ public class FirstFragment extends Fragment {
                                             if (chatMemName.length() == 0)
                                                 chatMemName = chatMemPhone;
 
-
                                         }
                                     }
+                                    mChat.setName(chatMemName);
+                                    mChat.setPhone(chatMemPhone);
+                                    chatList.add(mChat);
+                                    mChatListAdapter.notifyDataSetChanged();
+                                    Log.e("from fragment name: ", mChat.getName());
+                                    Log.e("from fragment phone: ", mChat.getPhone());
 
 
                                 }
-                                mChat.setName(chatMemName);
-                                mChat.setPhone(chatMemPhone);
-                                chatList.add(mChat);
-                                mChatListAdapter.notifyDataSetChanged();
+
 
                             }
 
@@ -137,44 +141,6 @@ public class FirstFragment extends Fragment {
             }
         });
     }
-
-//    private void getNamePhoneOfChatMem() {
-//
-//        for (int ind = position; ind < chatMemList.size(); ind++) {
-//
-//
-//            DatabaseReference chatMemDb = FirebaseDatabase.getInstance().getReference().child("user").child(chatMemList.get(ind));
-//
-//            int finalInd = ind;
-//            chatMemDb.addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(@NonNull DataSnapshot chatMemSnapshot) {
-//
-//                    chatMemName = chatMemSnapshot.child("name").getValue().toString();
-//                    chatMemPhone = chatMemSnapshot.child("phone").getValue().toString();
-//
-//
-//                    //getting name and phone of user's chat member's from database
-//
-//                    if (chatMemName.length() == 0) chatMemName = chatMemPhone;
-//                    chatList.get(finalInd).setName(chatMemName);
-//                    chatList.get(finalInd).setPhone(chatMemPhone);
-//
-//                    mChatListAdapter.notifyDataSetChanged();
-//
-//
-//                }
-//
-//                @Override
-//                public void onCancelled(@NonNull DatabaseError error) {
-//
-//                }
-//            });
-//
-//            position++;
-//
-//        }
-//    }
 
     private void initializeRecyclerView() {
         chatList = new ArrayList<>();

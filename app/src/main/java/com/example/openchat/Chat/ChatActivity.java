@@ -22,7 +22,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -74,39 +73,20 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void getChatMessages() {
-
         String authUser = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
         mChatDb.addChildEventListener(new ChildEventListener() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
                 if (dataSnapshot.exists()) {
-                    String text = "";
-                    final String[] creatorID = {""};
+                    String text = "", creatorID = "";
                     ArrayList<String> mediaUrlList = new ArrayList<>();
                     if (dataSnapshot.child("text").getValue() != null) {
                         text = Objects.requireNonNull(dataSnapshot.child("text").getValue()).toString();
                     }
                     if (dataSnapshot.child("creator").getValue() != null) {
-                        creatorID[0] = Objects.requireNonNull(dataSnapshot.child("creator").getValue()).toString();
+                        creatorID = Objects.requireNonNull(dataSnapshot.child("creator").getValue()).toString();
 
-                        if (creatorID[0].equals(authUser)) {
-                            creatorID[0] = "You";
-                        } else {
-                            DatabaseReference chatPersonRef = FirebaseDatabase.getInstance().getReference().child("user").child(creatorID[0]);
-                            chatPersonRef.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                    creatorID[0] = snapshot.child("name").getValue().toString();
-
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError error) {
-
-                                }
-                            });
-                        }
                     }
                     if (dataSnapshot.child("media").getChildrenCount() > 0) {
                         for (DataSnapshot mediaSnapshot : dataSnapshot.child("media").getChildren()) {
@@ -114,8 +94,8 @@ public class ChatActivity extends AppCompatActivity {
                         }
                     }
 
-                    if (text.length() != 0 && creatorID[0].length() != 0) {
-                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID[0], text, mediaUrlList);
+                    if (text.length() != 0 && creatorID.length() != 0) {
+                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList);
                         mMessageList.add(mMessage);
                         mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
                         mChatAdapter.notifyDataSetChanged();

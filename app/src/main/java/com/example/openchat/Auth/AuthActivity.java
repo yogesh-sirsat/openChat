@@ -1,6 +1,7 @@
 package com.example.openchat.Auth;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,10 +10,11 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.openchat.MainActivity;
 import com.example.openchat.R;
+import com.example.openchat.SplashScreenActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
@@ -30,23 +32,35 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class AuthActivity extends AppCompatActivity {
 
+    private static String AuthUserKey;
     private EditText mPhoneNumber, mCode;
     private Button mSend;
-
+    private static Context appContext;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
 
     private String mVerificationId;
 
+    public static Context getAppContext() {
+        return appContext;
+    }
+
+    public static String getAuthUserKey() {
+        return AuthUserKey;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
 
         FirebaseApp.initializeApp(this);
+        appContext = getApplicationContext();
 
         userIsLoggedIn();
 
@@ -88,8 +102,11 @@ public class AuthActivity extends AppCompatActivity {
         };
 
         getPermissions();
+        AuthUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+
 
     }
+
 
     private void verifyPhoneNumberWithCode() {
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId, mCode.getText().toString());
@@ -137,7 +154,7 @@ public class AuthActivity extends AppCompatActivity {
     private void userIsLoggedIn() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+            startActivity(new Intent(getApplicationContext(), SplashScreenActivity.class));
             finish();
         }
     }
