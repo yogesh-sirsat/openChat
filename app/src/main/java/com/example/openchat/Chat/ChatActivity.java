@@ -3,13 +3,17 @@ package com.example.openchat.Chat;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +26,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -33,22 +38,19 @@ import java.util.Objects;
 
 public class ChatActivity extends AppCompatActivity {
 
-    RecyclerView mChat, mMedia;
-    ArrayList<MessageObject> mMessageList;
-    ArrayList<String> mediaUriList = new ArrayList<>();
-    RecyclerView.Adapter mChatAdapter, mMediaAdapter;
-    RecyclerView.LayoutManager mChatLayoutManager, mMediaLayoutManager;
-    String chatId;
-    DatabaseReference mChatDb;
-    int PICK_IMAGE_INTENT = 1;
-
-
-    int totalMediaUploaded = 0;
-
-
+    String chatId, authUserUid = "", thirdUserUid = "", thirdUserName = "";
     ArrayList<String> mediaIdList = new ArrayList<>();
+    ArrayList<MessageObject> mMessageList;
+    int totalMediaUploaded = 0;
+    DatabaseReference mChatDb;
     EditText mMessage;
+    int PICK_IMAGE_INTENT = 1;
+    ArrayList<String> mediaUriList = new ArrayList<>();
+    private RecyclerView.Adapter mChatAdapter, mMediaAdapter;
+    private RecyclerView.LayoutManager mChatLayoutManager;
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @SuppressLint("LongLogTag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,9 +58,57 @@ public class ChatActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_chat);
 
+        authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+
+
+        // calling the action bar
+        ActionBar actionBar = getSupportActionBar();
+
+
         chatId = getIntent().getExtras().getString("chatID");
 
         mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
+
+        mChatDb.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                        if (!Objects.equals(childSnapshot.getKey(), authUserUid)) {
+
+                            thirdUserUid = childSnapshot.getKey();
+                            thirdUserName = Objects.requireNonNull(childSnapshot.child("name").getValue()).toString();
+                            //setting third user name as title
+                            assert actionBar != null;
+                            actionBar.setTitle(thirdUserName);
+                            Log.e("mChatDb users value event :", "called here");
+                            Log.e("third user uid from chat", thirdUserUid);
+                            Log.e("third user name from chat", thirdUserName);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        Log.e("chat activity :", "called here");
+        Log.e("third user uid from chat", thirdUserUid);
+        Log.e("third user name from chat", thirdUserName);
+
+
+        // Customize the back button
+//        actionBar.setHomeAsUpIndicator(R.drawable.);
+
+        // showing the back button in action bar
+        assert actionBar != null;
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        //setting third user name as title
+        actionBar.setTitle(thirdUserName);
 
         Button mSend = findViewById(R.id.send);
         mSend.setOnClickListener(v -> sendMessage());
@@ -73,11 +123,14 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void getChatMessages() {
-        String authUser = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+        Log.e("getChatMessages:", "called here");
+
         mChatDb.addChildEventListener(new ChildEventListener() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String previousChildName) {
+                Log.e("addChildEventListener:", "called here");
+
                 if (dataSnapshot.exists()) {
                     String text = "", creatorID = "";
                     ArrayList<String> mediaUrlList = new ArrayList<>();
@@ -94,7 +147,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                     }
 
-                    if (text.length() != 0 && creatorID.length() != 0) {
+                    if (creatorID.length() != 0) {
                         MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList);
                         mMessageList.add(mMessage);
                         mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
@@ -127,9 +180,11 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
+        Log.e("sendMessage:", "called here");
 
         mMessage = findViewById(R.id.messageToSend);
         String messageId = mChatDb.push().getKey();
+        assert messageId != null;
         final DatabaseReference newMessageDb = mChatDb.child(messageId);
 
         final Map newMessageMap = new HashMap<>();
@@ -170,8 +225,16 @@ public class ChatActivity extends AppCompatActivity {
                 updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
             }
         }
+        Log.e("sendMessage end:", "called here");
+
+        //setting chatId as true as user's started their chat
+        FirebaseDatabase.getInstance().getReference().child("user").child(authUserUid).child("chat").child(chatId).setValue(true);
+        FirebaseDatabase.getInstance().getReference().child("user").child(thirdUserUid).child("chat").child(chatId).setValue(true);
+
+
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void updateDatabaseWithNewMessage(DatabaseReference newMessageDb, Map newMessageMap) {
 
         newMessageDb.updateChildren(newMessageMap);
@@ -188,7 +251,7 @@ public class ChatActivity extends AppCompatActivity {
     private void initializeMessage() {
 
         mMessageList = new ArrayList<>();
-        mChat = findViewById(R.id.messageList);
+        RecyclerView mChat = findViewById(R.id.messageList);
         mChat.setNestedScrollingEnabled(false);
         mChat.setHasFixedSize(false);
         mChatLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false);
@@ -201,23 +264,25 @@ public class ChatActivity extends AppCompatActivity {
     private void initializeMedia() {
 
         mediaUriList = new ArrayList<>();
-        mMedia = findViewById(R.id.mediaList);
+        RecyclerView mMedia = findViewById(R.id.mediaList);
         mMedia.setNestedScrollingEnabled(false);
         mMedia.setHasFixedSize(false);
-        mMediaLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView.LayoutManager mMediaLayoutManager = new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false);
         mMedia.setLayoutManager(mMediaLayoutManager);
         mMediaAdapter = new MediaAdapter(getApplicationContext(), mediaUriList);
         mMedia.setAdapter(mMediaAdapter);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void openGallery() {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent.setAction(intent.ACTION_GET_CONTENT);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture(s)"), PICK_IMAGE_INTENT);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         Log.e("onActivityResult", "called here!!");
@@ -236,5 +301,15 @@ public class ChatActivity extends AppCompatActivity {
                 mMediaAdapter.notifyDataSetChanged();
             }
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

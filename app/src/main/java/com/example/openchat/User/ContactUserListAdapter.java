@@ -107,8 +107,8 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
                         String thirdUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(mContactUserList.get(position).getUid()).getKey();
 
                         assert chatKey != null;
-                        authUserChat.child(chatKey).setValue(true);
-                        thirdUserChat.child(chatKey).setValue(true);
+                        authUserChat.child(chatKey).setValue(false);
+                        thirdUserChat.child(chatKey).setValue(false);
 
                         FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(authUserKey).child("name").setValue(authUserProfile.getUserName());
                         FirebaseDatabase.getInstance().getReference().child("chat").child(chatKey).child("users").child(authUserKey).child("phone").setValue(authUserProfile.getUserPhone());

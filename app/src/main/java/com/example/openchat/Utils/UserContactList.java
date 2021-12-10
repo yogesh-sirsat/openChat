@@ -198,8 +198,8 @@ public class UserContactList {
                     assert mChatKey != null;
                     FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).setValue(true);
 
-                    authUserChat.child(mChatKey).setValue(true);
-                    thirdUserChat.child(mChatKey).setValue(true);
+                    authUserChat.child(mChatKey).setValue(false);
+                    thirdUserChat.child(mChatKey).setValue(false);
 
                     FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).child("name").setValue(userProfile.getUserName());
                     FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).child("phone").setValue(userProfile.getUserPhone());

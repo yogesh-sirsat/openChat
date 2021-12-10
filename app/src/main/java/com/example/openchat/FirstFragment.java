@@ -79,6 +79,11 @@ public class FirstFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     Log.e("user chat count : ", "" + dataSnapshot.getChildrenCount());
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                        //only created chat's which marked as true will appear in chat list
+                        if (childSnapshot.getValue().equals(false)) {
+                            Log.e(childSnapshot.getKey(), "skipped from chat list");
+                            continue;
+                        }
                         boolean exists = false;
                         for (ChatObject chatObjectIt : chatList) {
                             if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
