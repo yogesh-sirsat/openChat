@@ -9,14 +9,26 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openchat.Utils.UserContactList;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.Objects;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
+
+    public static String AuthUserKey;
+
+    public static String getAuthUserKey() {
+        return AuthUserKey;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AuthUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+
         UserContactList.contactList();
 
         new Handler().postDelayed(new Runnable() {
@@ -30,4 +42,5 @@ public class SplashScreenActivity extends AppCompatActivity {
         }, 1000);
 
     }
+
 }

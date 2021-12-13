@@ -158,6 +158,12 @@ public class FirstFragment extends Fragment {
         mChatList.setAdapter(mChatListAdapter);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
 
 }
 

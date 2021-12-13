@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/chat_bg"
     tools:context=".Chat.ChatActivity">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -14,42 +15,57 @@
 
     <LinearLayout
         android:id="@+id/sendLayout"
-        android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:orientation="vertical">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/mediaList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/media_adapter_bg" />
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:background="@drawable/send_layout_bg"
             android:orientation="horizontal">
 
             <EditText
                 android:id="@+id/messageToSend"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.8"
-                android:hint="message..." />
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:background="@drawable/send_layout_bg"
+                android:hint="type message..."
+                android:paddingLeft="12dp" />
+
 
             <Button
                 android:id="@+id/addMedia"
+                style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.26"
-                android:text="add media" />
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:layout_weight="0.1"
+                android:background="@drawable/send_btn_bg"
+                android:drawableLeft="@drawable/ic_gallery"
+                android:shadowColor="@color/white" />
 
             <Button
                 android:id="@+id/send"
+                style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.16"
-                android:text="send" />
+                android:layout_margin="4dp"
+                android:layout_weight="0.1"
+                android:background="@drawable/send_btn_bg"
+                android:drawableLeft="@drawable/ic_send"
+                android:shadowColor="@color/white" />
 
 
         </LinearLayout>

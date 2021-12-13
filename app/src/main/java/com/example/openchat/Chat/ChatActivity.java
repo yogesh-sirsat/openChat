@@ -19,20 +19,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openchat.R;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,12 +43,12 @@ public class ChatActivity extends AppCompatActivity {
 
     String chatId, authUserUid = "", thirdUserUid = "", thirdUserName = "";
     ArrayList<String> mediaIdList = new ArrayList<>();
+    ArrayList<String> mediaUriList = new ArrayList<>();
     ArrayList<MessageObject> mMessageList;
-    int totalMediaUploaded = 0;
     DatabaseReference mChatDb;
     EditText mMessage;
+    int totalMediaUploaded = 0;
     int PICK_IMAGE_INTENT = 1;
-    ArrayList<String> mediaUriList = new ArrayList<>();
     private RecyclerView.Adapter mChatAdapter, mMediaAdapter;
     private RecyclerView.LayoutManager mChatLayoutManager;
 
@@ -82,9 +85,7 @@ public class ChatActivity extends AppCompatActivity {
                             //setting third user name as title
                             assert actionBar != null;
                             actionBar.setTitle(thirdUserName);
-                            Log.e("mChatDb users value event :", "called here");
-                            Log.e("third user uid from chat", thirdUserUid);
-                            Log.e("third user name from chat", thirdUserName);
+
                         }
                     }
                 }
@@ -95,9 +96,7 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
-        Log.e("chat activity :", "called here");
-        Log.e("third user uid from chat", thirdUserUid);
-        Log.e("third user name from chat", thirdUserName);
+
 
 
         // Customize the back button
@@ -132,7 +131,7 @@ public class ChatActivity extends AppCompatActivity {
                 Log.e("addChildEventListener:", "called here");
 
                 if (dataSnapshot.exists()) {
-                    String text = "", creatorID = "";
+                    String text = "", creatorID = "", timestamp = "";
                     ArrayList<String> mediaUrlList = new ArrayList<>();
                     if (dataSnapshot.child("text").getValue() != null) {
                         text = Objects.requireNonNull(dataSnapshot.child("text").getValue()).toString();
@@ -143,12 +142,15 @@ public class ChatActivity extends AppCompatActivity {
                     }
                     if (dataSnapshot.child("media").getChildrenCount() > 0) {
                         for (DataSnapshot mediaSnapshot : dataSnapshot.child("media").getChildren()) {
-                            mediaUrlList.add(Objects.requireNonNull(mediaSnapshot.getValue()).toString());
+                            mediaUrlList.add(Objects.requireNonNull(mediaSnapshot.getValue().toString()));
                         }
                     }
 
                     if (creatorID.length() != 0) {
-                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList);
+                        Date date = new Date(dataSnapshot.child("timestamp").getValue(Long.class));
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("H:m d-M-yy", Locale.getDefault());
+                        timestamp = simpleDateFormat.format(date);
+                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList, timestamp);
                         mMessageList.add(mMessage);
                         mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
                         mChatAdapter.notifyDataSetChanged();
@@ -180,7 +182,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
-        Log.e("sendMessage:", "called here");
 
         mMessage = findViewById(R.id.messageToSend);
         String messageId = mChatDb.push().getKey();
@@ -188,6 +189,7 @@ public class ChatActivity extends AppCompatActivity {
         final DatabaseReference newMessageDb = mChatDb.child(messageId);
 
         final Map newMessageMap = new HashMap<>();
+        newMessageMap.put("timestamp", ServerValue.TIMESTAMP);
         newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
 
         if (!mMessage.getText().toString().isEmpty()) {
@@ -202,30 +204,21 @@ public class ChatActivity extends AppCompatActivity {
                 final StorageReference filePath = FirebaseStorage.getInstance().getReference().child("chat").child(chatId).child(messageId).child(mediaId);
 
                 UploadTask uploadTask = filePath.putFile(Uri.parse(mediaUri));
-                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                newMessageMap.put("/media/" + mediaIdList.get(totalMediaUploaded) + "/", uri.toString());
+                uploadTask.addOnSuccessListener(taskSnapshot -> filePath.getDownloadUrl().addOnSuccessListener(uri -> {
+                    newMessageMap.put("/media/" + mediaIdList.get(totalMediaUploaded) + "/", uri.toString());
 
-                                totalMediaUploaded++;
-                                if (totalMediaUploaded == mediaUriList.size()) {
-                                    updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
-                                }
-
-                            }
-                        });
+                    totalMediaUploaded++;
+                    if (totalMediaUploaded == mediaUriList.size()) {
+                        updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
                     }
-                });
+
+                }));
             }
         } else {
             if (!mMessage.getText().toString().isEmpty()) {
                 updateDatabaseWithNewMessage(newMessageDb, newMessageMap);
             }
         }
-        Log.e("sendMessage end:", "called here");
 
         //setting chatId as true as user's started their chat
         FirebaseDatabase.getInstance().getReference().child("user").child(authUserUid).child("chat").child(chatId).setValue(true);
@@ -258,6 +251,8 @@ public class ChatActivity extends AppCompatActivity {
         mChat.setLayoutManager(mChatLayoutManager);
         mChatAdapter = new MessageAdapter(mMessageList);
         mChat.setAdapter(mChatAdapter);
+        mChat.getRecycledViewPool().setMaxRecycledViews(0, 0);
+
 
     }
 
@@ -285,7 +280,6 @@ public class ChatActivity extends AppCompatActivity {
     @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        Log.e("onActivityResult", "called here!!");
 
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {

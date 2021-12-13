@@ -32,7 +32,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class AuthActivity extends AppCompatActivity {
@@ -45,12 +44,9 @@ public class AuthActivity extends AppCompatActivity {
 
     private String mVerificationId;
 
+
     public static Context getAppContext() {
         return appContext;
-    }
-
-    public static String getAuthUserKey() {
-        return AuthUserKey;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -102,7 +98,6 @@ public class AuthActivity extends AppCompatActivity {
         };
 
         getPermissions();
-        AuthUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
 
 
     }

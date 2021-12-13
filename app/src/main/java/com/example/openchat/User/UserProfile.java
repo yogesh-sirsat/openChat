@@ -2,7 +2,7 @@ package com.example.openchat.User;
 
 import androidx.annotation.NonNull;
 
-import com.example.openchat.Auth.AuthActivity;
+import com.example.openchat.SplashScreenActivity;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -19,7 +19,7 @@ public class UserProfile {
     }
 
     public static UserProfile getUserProfile() {
-        DatabaseReference authUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(AuthActivity.getAuthUserKey());
+        DatabaseReference authUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(SplashScreenActivity.getAuthUserKey());
         authUserDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
