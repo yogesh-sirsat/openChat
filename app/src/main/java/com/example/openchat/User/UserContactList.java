@@ -1,4 +1,4 @@
-package com.example.openchat.Utils;
+package com.example.openchat.User;
 
 import static android.content.Context.TELEPHONY_SERVICE;
 
@@ -13,8 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.example.openchat.Auth.AuthActivity;
-import com.example.openchat.User.ContactUserObject;
-import com.example.openchat.User.UserProfile;
+import com.example.openchat.Utils.CountryToPhonePrefix;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

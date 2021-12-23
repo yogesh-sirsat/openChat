@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/audio_call"
+        android:icon="@drawable/ic_audio_call"
+        android:title="audio call"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/video_call"
+        android:icon="@drawable/ic_video_call"
+        android:title="video call"
+        app:showAsAction="always" />
+
+
+    <item
+        android:id="@+id/chat_menu"
+        android:icon="@drawable/ic_3_ver_dot"
+        android:title="chat menu"
+        app:showAsAction="always">
+
+        <!-- below code is for later upcoming use -->
+
+        <!--        <menu>-->
+
+        <!--            <item android:id="@+id/action_settings"-->
+        <!--                android:icon="@android:drawable/ic_menu_preferences"-->
+        <!--                android:title="block user"-->
+        <!--                app:showAsAction="ifRoom" />-->
+
+        <!--            <item android:id="@+id/action_help"-->
+        <!--                android:icon="@android:drawable/ic_menu_help"-->
+        <!--                android:title="help"-->
+        <!--                app:showAsAction="ifRoom" />-->
+
+        <!--        <item-->
+        <!--            android:id="@+id/search"-->
+        <!--            android:icon="@drawable/ic_search"-->
+        <!--            app:showAsAction="always|collapseActionView"-->
+        <!--            app:actionViewClass="android.widget.SearchView"-->
+        <!--            android:title="search"/>-->
+
+        <!--        </menu>-->
+
+
+    </item>
+
+
+</menu>

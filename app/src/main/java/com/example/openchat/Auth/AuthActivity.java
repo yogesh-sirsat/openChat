@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 public class AuthActivity extends AppCompatActivity {
 
-    private static String AuthUserKey;
     private EditText mPhoneNumber, mCode;
     private Button mSend;
     private static Context appContext;

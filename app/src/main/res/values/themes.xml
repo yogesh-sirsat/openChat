@@ -28,6 +28,21 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
+    <!-- incoming call activity theme -->
+    <style name="IncomingCallTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+
+    </style>
+
+    <!-- video call activity theme -->
+    <style name="VideoCallTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+
+    </style>
+
+
     <style name="Theme.OpenChat.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.OpenChat.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

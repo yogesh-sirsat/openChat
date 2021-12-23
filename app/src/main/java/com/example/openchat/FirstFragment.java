@@ -62,6 +62,7 @@ public class FirstFragment extends Fragment {
         initializeRecyclerView();
         getUserChatList();
 
+
         // Inflate the layout for this fragment
 //        return inflater.inflate(R.layout.fragment_first, container, false);
         return fragmentView;
@@ -108,11 +109,11 @@ public class FirstFragment extends Fragment {
                                             chatMemName = chatSnapshot.child("name").getValue().toString();
                                             chatMemPhone = chatSnapshot.child("phone").getValue().toString();
 
-                                            if (chatMemName.length() == 0)
-                                                chatMemName = chatMemPhone;
 
                                         }
                                     }
+                                    if (chatMemName.length() == 0)
+                                        chatMemName = chatMemPhone;
                                     mChat.setName(chatMemName);
                                     mChat.setPhone(chatMemPhone);
                                     chatList.add(mChat);

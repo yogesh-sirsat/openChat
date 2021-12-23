@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/secondaryLightColor"
+    tools:context=".Call.AudioCallActivity">
+
+    <WebView
+        android:id="@+id/video_webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/callControlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="64dp"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/addVideoBtn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@color/primaryColor"
+            android:padding="4dp"
+            android:src="@drawable/ic_video_call" />
+
+        <ImageView
+            android:id="@+id/toggleVideoBtn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="36dp"
+            android:background="@color/primaryColor"
+            android:padding="4dp"
+            android:src="@drawable/ic_baseline_videocam_24" />
+
+        <ImageView
+            android:id="@+id/toggleAudioBtn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginLeft="36dp"
+            android:background="@color/primaryColor"
+            android:padding="4dp"
+            android:src="@drawable/ic_baseline_mic_24" />
+
+        <ImageView
+            android:id="@+id/disConnect"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="36dp"
+            android:background="@color/primaryColor"
+            android:padding="4dp"
+            android:src="@drawable/ic_baseline_call_end_24" />
+
+    </LinearLayout>
+</RelativeLayout>

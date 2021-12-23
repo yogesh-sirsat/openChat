@@ -2,22 +2,28 @@ package com.example.openchat.Chat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openchat.Call.AudioCallActivity;
+import com.example.openchat.Call.VideoCallActivity;
 import com.example.openchat.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -41,14 +47,21 @@ import java.util.Objects;
 
 public class ChatActivity extends AppCompatActivity {
 
-    String chatId, authUserUid = "", thirdUserUid = "", thirdUserName = "";
+    private static final int PERMISSION_REQUEST_CODE = 1;
+    public static boolean videoCallReq = false;
+
     ArrayList<String> mediaIdList = new ArrayList<>();
     ArrayList<String> mediaUriList = new ArrayList<>();
     ArrayList<MessageObject> mMessageList;
+
     DatabaseReference mChatDb;
     EditText mMessage;
+    String chatId, authUserUid = "", otherUserUid = "", otherUserName = "", authUserNameByOtherUsersContact = "";
     int totalMediaUploaded = 0;
     int PICK_IMAGE_INTENT = 1;
+    String[] permissions = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"};
+    boolean perCamera, perRecordAudio, isOtherUserAvailable = false;
+
     private RecyclerView.Adapter mChatAdapter, mMediaAdapter;
     private RecyclerView.LayoutManager mChatLayoutManager;
 
@@ -60,6 +73,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
         setContentView(R.layout.activity_chat);
+
+        Log.e("chat activity : ", "called here");
 
         authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
 
@@ -78,13 +93,14 @@ public class ChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                        authUserNameByOtherUsersContact = snapshot.child(authUserUid).child("name").getValue().toString();
                         if (!Objects.equals(childSnapshot.getKey(), authUserUid)) {
 
-                            thirdUserUid = childSnapshot.getKey();
-                            thirdUserName = Objects.requireNonNull(childSnapshot.child("name").getValue()).toString();
-                            //setting third user name as title
+                            otherUserUid = childSnapshot.getKey();
+                            otherUserName = Objects.requireNonNull(childSnapshot.child("name").getValue()).toString();
+                            //setting other user name as title
                             assert actionBar != null;
-                            actionBar.setTitle(thirdUserName);
+                            actionBar.setTitle(otherUserName);
 
                         }
                     }
@@ -98,7 +114,6 @@ public class ChatActivity extends AppCompatActivity {
         });
 
 
-
         // Customize the back button
 //        actionBar.setHomeAsUpIndicator(R.drawable.);
 
@@ -106,8 +121,8 @@ public class ChatActivity extends AppCompatActivity {
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        //setting third user name as title
-        actionBar.setTitle(thirdUserName);
+        //setting other end user name as title
+        actionBar.setTitle(otherUserName);
 
         Button mSend = findViewById(R.id.send);
         mSend.setOnClickListener(v -> sendMessage());
@@ -222,7 +237,7 @@ public class ChatActivity extends AppCompatActivity {
 
         //setting chatId as true as user's started their chat
         FirebaseDatabase.getInstance().getReference().child("user").child(authUserUid).child("chat").child(chatId).setValue(true);
-        FirebaseDatabase.getInstance().getReference().child("user").child(thirdUserUid).child("chat").child(chatId).setValue(true);
+        FirebaseDatabase.getInstance().getReference().child("user").child(otherUserUid).child("chat").child(chatId).setValue(true);
 
 
     }
@@ -298,12 +313,150 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_chat, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 this.finish();
                 return true;
+
+            case R.id.audio_call:
+                requestAudioCall();
+                return true;
+
+            case R.id.video_call:
+                if (!permissionsGranted()) {
+                    askPermissions();
+                    if (perCamera && perRecordAudio) {
+                        checkCallStatus();
+                    } else {
+                        Toast.makeText(this, "Allow For Access To Video Call", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    checkCallStatus();
+
+                }
+
+
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
         }
-        return super.onOptionsItemSelected(item);
+    }
+
+    private void requestAudioCall() {
+        Log.e("requestAudioCall : ", "called here");
+        if (isOtherUserAvailable) {
+            Intent videoCallIntent = new Intent(ChatActivity.this, AudioCallActivity.class);
+            startActivity(videoCallIntent);
+
+        } else {
+            Toast.makeText(this, otherUserName + " Is Busy", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void requestVideoCall() {
+        Log.e("requestVideoCall : ", "called here");
+
+        if (isOtherUserAvailable) {
+            Intent videoCallIntent = new Intent(ChatActivity.this, VideoCallActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("otherUserName", otherUserName);
+            bundle.putString("otherUserUid", otherUserUid);
+            bundle.putString("authUserNameByOtherUsersContact", authUserNameByOtherUsersContact);
+            bundle.putString("authUserUid", authUserUid);
+            videoCallIntent.putExtras(bundle);
+            videoCallReq = true;
+            startActivity(videoCallIntent);
+        } else {
+            Toast.makeText(this, otherUserName + " Is Busy", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void checkCallStatus() {
+
+        DatabaseReference otherUserLiveCallStatus = FirebaseDatabase.getInstance().getReference().child("user").child(otherUserUid).child("liveCall");
+        otherUserLiveCallStatus.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("LongLogTag")
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.e("other user live call status : ", "function called here");
+                if (snapshot.exists()) {
+                    isOtherUserAvailable = false;
+                    Log.e("other user live call status : ", "1");
+
+                } else {
+                    isOtherUserAvailable = true;
+                    Log.e("other user live call status : ", "2");
+
+                }
+                requestVideoCall();
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+    }
+
+    private void askPermissions() {
+        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+    }
+
+    private boolean permissionsGranted() {
+        for (String permission : permissions) {
+            if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0) {
+                    boolean cameraAccess = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    boolean recordAudioAccess = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+
+                    if (cameraAccess && recordAudioAccess) {
+                        perCamera = true;
+                        perRecordAudio = true;
+                    } else if (recordAudioAccess) {
+                        perRecordAudio = true;
+                        perCamera = false;
+                    } else if (cameraAccess) {
+                        perCamera = true;
+                        perRecordAudio = false;
+                    } else {
+                        perRecordAudio = false;
+                        perCamera = false;
+                    }
+
+                }
+                return;
+
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }
