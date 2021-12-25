@@ -31,8 +31,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
         RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutView.setLayoutParams(layoutParams);
 
-        ChatListViewHolder ChatListViewHolder = new ChatListViewHolder(layoutView);
-        return ChatListViewHolder;
+        return new ChatListViewHolder(layoutView);
     }
 
     @SuppressLint("SetTextI18n")
@@ -47,7 +46,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), ChatActivity.class);
                 Bundle bundle = new Bundle();
-                bundle.putString("chatID", mChatList.get(holder.getAdapterPosition()).getChatId());
+                bundle.putString("chatId", mChatList.get(position).getChatId());
+                bundle.putString("chatsName", mChatList.get(position).getName());
                 intent.putExtras(bundle);
                 v.getContext().startActivity(intent);
             }

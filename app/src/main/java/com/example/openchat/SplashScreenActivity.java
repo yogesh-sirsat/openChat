@@ -23,6 +23,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         return AuthUserKey;
     }
 
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,5 +43,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         }, 1000);
 
     }
+
 
 }

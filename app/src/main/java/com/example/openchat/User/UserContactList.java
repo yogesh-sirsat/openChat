@@ -37,12 +37,16 @@ public class UserContactList {
     public static String mChatKey;
     public static UserProfile userProfile = UserProfile.getUserProfile();
 
+    static DatabaseReference mUserDbRef;
+    static String authUserUid;
+
 //    public static Context context = MainActivity.getAppContext();
 
     public static void test() {
         Log.e("text function :", "is called here");
     }
 
+    @SuppressLint("Range")
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static void contactList() {
         String ISOPrefix = countryIso(), name = "", phone = "";
@@ -71,9 +75,9 @@ public class UserContactList {
 
     public static void genContactUserDetails(ContactUserObject mContact) {
         Log.e("contactUserDetails : ", "called here");
-        DatabaseReference mUserDB = FirebaseDatabase.getInstance("https://openchat-ys-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("user");
-        String authUserUid = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
-        Query query = mUserDB.orderByChild("phone").equalTo(mContact.getPhone());
+        mUserDbRef = FirebaseDatabase.getInstance("https://openchat-ys-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("user");
+        authUserUid = mUserDbRef.child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+        Query query = mUserDbRef.orderByChild("phone").equalTo(mContact.getPhone());
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
@@ -143,7 +147,8 @@ public class UserContactList {
 
 
         mAuthUserChatDB = new HashMap<>();
-        DatabaseReference authUserChat = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).child("chat");
+        DatabaseReference authUserChat = mUserDbRef.child(authUserUid).child("chat");
+        DatabaseReference chatDbRef = FirebaseDatabase.getInstance().getReference().child("chat");
 
 
         authUserChat.addValueEventListener(new ValueEventListener() {
@@ -151,7 +156,23 @@ public class UserContactList {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Log.e("Count ", "" + snapshot.getChildrenCount());
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    mAuthUserChatDB.put(childSnapshot.getKey(), 1);
+                    //checking is group before adding to authUserChatDb
+                    chatDbRef.child(Objects.requireNonNull(childSnapshot.getKey())).child("isGroup").addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
+                                Boolean isGroup = (Boolean) snapshot.getValue();
+                                if (!isGroup) {
+                                    mAuthUserChatDB.put(childSnapshot.getKey(), 1);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
                 }
 
                 for (Map.Entry mEle : mAuthUserChatDB.entrySet()) {
@@ -171,7 +192,7 @@ public class UserContactList {
         });
 
 
-        DatabaseReference thirdUserChat = FirebaseDatabase.getInstance().getReference().child("user").child(contact.getUid()).child("chat");
+        DatabaseReference thirdUserChat = mUserDbRef.child(contact.getUid()).child("chat");
 
         thirdUserChat.addValueEventListener(new ValueEventListener() {
             @Override
@@ -181,8 +202,8 @@ public class UserContactList {
                     if (mAuthUserChatDB.containsKey(childSnapShot.getKey())) {
                         mChatKeyExists = true;
                         mChatKey = childSnapShot.getKey();
-                        FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(contact.getUid()).child("name").setValue((String) contact.getName());
-                        FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(contact.getUid()).child("phone").setValue((String) contact.getPhone());
+                        chatDbRef.child(mChatKey).child("users").child(contact.getUid()).child("name").setValue((String) contact.getName());
+                        chatDbRef.child(mChatKey).child("users").child(contact.getUid()).child("phone").setValue((String) contact.getPhone());
                         Log.e("createChat name : ", contact.getName());
 
                         break;
@@ -190,23 +211,23 @@ public class UserContactList {
 
                 }
                 if (!mChatKeyExists) {
-                    mChatKey = FirebaseDatabase.getInstance().getReference().child("chat").push().getKey();
-                    String authUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
-                    String thirdUserKey = FirebaseDatabase.getInstance().getReference().child("user").child(contact.getUid()).getKey();
+                    mChatKey = chatDbRef.push().getKey();
+                    String authUserKey = mUserDbRef.child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+                    String thirdUserKey = mUserDbRef.child(contact.getUid()).getKey();
 
                     assert mChatKey != null;
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).setValue(true);
+                    chatDbRef.child(mChatKey).child("users").child(authUserKey).setValue(true);
 
                     authUserChat.child(mChatKey).setValue(false);
                     thirdUserChat.child(mChatKey).setValue(false);
 
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).child("name").setValue(userProfile.getUserName());
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(authUserKey).child("phone").setValue(userProfile.getUserPhone());
+                    chatDbRef.child(mChatKey).child("users").child(authUserKey).child("name").setValue(userProfile.getUserName());
+                    chatDbRef.child(mChatKey).child("users").child(authUserKey).child("phone").setValue(userProfile.getUserPhone());
                     Log.e("From UserContactList : ", "name and phone");
                     Log.e(userProfile.getUserName(), userProfile.getUserPhone());
 
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(thirdUserKey).child("name").setValue((String) contact.getName());
-                    FirebaseDatabase.getInstance().getReference().child("chat").child(mChatKey).child("users").child(thirdUserKey).child("phone").setValue((String) contact.getPhone());
+                    chatDbRef.child(mChatKey).child("users").child(thirdUserKey).child("name").setValue((String) contact.getName());
+                    chatDbRef.child(mChatKey).child("users").child(thirdUserKey).child("phone").setValue((String) contact.getPhone());
                     Log.e("createChat name : ", contact.getName());
 
 

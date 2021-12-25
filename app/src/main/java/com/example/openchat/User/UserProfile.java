@@ -1,16 +1,19 @@
 package com.example.openchat.User;
 
+import static com.example.openchat.SplashScreenActivity.getAuthUserKey;
+
 import androidx.annotation.NonNull;
 
-import com.example.openchat.SplashScreenActivity;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Objects;
+
 public class UserProfile {
-    public static String UserName = "", UserPhone = "", UserStatus = "";
+    public static String UserName = "", UserPhone = "", UserStatus = "", UserId = "";
 
     public UserProfile(String mUserName, String mUserPhone, String mUserStatus) {
         this.UserName = mUserName;
@@ -19,13 +22,14 @@ public class UserProfile {
     }
 
     public static UserProfile getUserProfile() {
-        DatabaseReference authUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(SplashScreenActivity.getAuthUserKey());
+        UserId = getAuthUserKey();
+        DatabaseReference authUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(UserId);
         authUserDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    UserName = snapshot.child("name").getValue().toString();
-                    UserPhone = snapshot.child("phone").getValue().toString();
+                    UserName = Objects.requireNonNull(snapshot.child("name").getValue()).toString();
+                    UserPhone = Objects.requireNonNull(snapshot.child("phone").getValue()).toString();
                 }
             }
 

@@ -35,7 +35,7 @@ public class FirstFragment extends Fragment {
     ArrayList<ChatObject> chatList;
     private int position = 0;
     private ArrayList<String> chatMemList = new ArrayList<>();
-    private String chatMemName = "", chatMemPhone = "";
+    private String chatsName = "", chatsPhone = "";
     private RecyclerView.Adapter mChatListAdapter;
     private View fragmentView;
 
@@ -85,15 +85,16 @@ public class FirstFragment extends Fragment {
                             Log.e(childSnapshot.getKey(), "skipped from chat list");
                             continue;
                         }
-                        boolean exists = false;
-                        for (ChatObject chatObjectIt : chatList) {
-                            if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
-                                exists = true;
-                            }
-                        }
-                        if (exists) continue;
+//                        boolean exists = false;
+//                        for (ChatObject chatObjectIt : chatList) {
+//                            if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
+//                                exists = true;
+//                            }
+//                        }
+//                        if (exists) continue;
 
-                        DatabaseReference chatsUserDB = chatDB.child(childSnapshot.getKey()).child("users");
+                        DatabaseReference chatsUserDB = chatDB.child(Objects.requireNonNull(childSnapshot.getKey()));
+
 
                         ChatObject mChat = new ChatObject(childSnapshot.getKey(), "", "");
 
@@ -102,20 +103,26 @@ public class FirstFragment extends Fragment {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                                if (snapshot.exists()) {
-                                    for (DataSnapshot chatSnapshot : snapshot.getChildren()) {
-                                        if (!chatSnapshot.getKey().equals(authUserUid)) {
-                                            chatMemList.add(chatSnapshot.getKey());
-                                            chatMemName = chatSnapshot.child("name").getValue().toString();
-                                            chatMemPhone = chatSnapshot.child("phone").getValue().toString();
+                                if (snapshot.child("users").exists()) {
+                                    Boolean isGroup = (Boolean) snapshot.child("isGroup").getValue();
+                                    if (isGroup) {
+                                        chatsName = Objects.requireNonNull(snapshot.child("name").getValue()).toString();
+                                    } else {
+                                        for (DataSnapshot chatSnapshot : snapshot.child("users").getChildren()) {
+                                            if (!chatSnapshot.getKey().equals(authUserUid)) {
+                                                chatMemList.add(chatSnapshot.getKey());
+                                                chatsName = chatSnapshot.child("name").getValue().toString();
+                                                chatsPhone = chatSnapshot.child("phone").getValue().toString();
 
 
+                                            }
                                         }
+                                        if (chatsName.length() == 0)
+                                            chatsName = chatsPhone;
                                     }
-                                    if (chatMemName.length() == 0)
-                                        chatMemName = chatMemPhone;
-                                    mChat.setName(chatMemName);
-                                    mChat.setPhone(chatMemPhone);
+
+                                    mChat.setName(chatsName);
+                                    mChat.setPhone(chatsPhone);
                                     chatList.add(mChat);
                                     mChatListAdapter.notifyDataSetChanged();
                                     Log.e("from fragment name: ", mChat.getName());
@@ -159,11 +166,7 @@ public class FirstFragment extends Fragment {
         mChatList.setAdapter(mChatListAdapter);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
 
-    }
 
 
 }

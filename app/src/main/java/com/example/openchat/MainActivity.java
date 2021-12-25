@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     //    private static final String ONESIGNAL_APP_ID = "5e9cf109-2422-458e-99e9-e15c1418e3ee";
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
-    private String incomingCallId;
+    private String incomingCallId = "", authUserId = "";
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -52,8 +52,7 @@ public class MainActivity extends AppCompatActivity {
 //        OneSignal.setAppId(ONESIGNAL_APP_ID);
 
 
-
-
+        authUserId = getAuthUserKey();
 
         Fresco.initialize(this);
         setContentView(R.layout.activity_main);
@@ -81,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                 }).attach();
 
         //incomingCall listener
-        FirebaseDatabase.getInstance().getReference().child("user").child(getAuthUserKey()).addValueEventListener(new ValueEventListener() {
+        FirebaseDatabase.getInstance().getReference().child("user").child(authUserId).addValueEventListener(new ValueEventListener() {
             @SuppressLint("LongLogTag")
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -163,5 +162,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    //direct exit from mainActiviy
+    @Override
+    public void onBackPressed() {
+        Intent exit = new Intent(Intent.ACTION_MAIN);
+        exit.addCategory(Intent.CATEGORY_HOME);
+        exit.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(exit);
+    }
 }

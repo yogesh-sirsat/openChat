@@ -20,9 +20,15 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
         <activity
+            android:name=".Group.CreateNewGroupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Group.SelectGroupMembersActivity"
+            android:exported="false" />
+        <activity
             android:name=".Call.IncomingCallActivity"
             android:exported="false"
-            android:theme="@style/IncomingCallTheme"></activity>
+            android:theme="@style/IncomingCallTheme" />
         <activity
             android:name=".Call.VideoCallActivity"
             android:exported="false"

@@ -12,10 +12,12 @@
         <entry key="app/src/main/res/drawable-anydpi/ic_video_call.xml" value="0.2359375" />
         <entry key="app/src/main/res/drawable-anydpi/ic_video_cam.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.371875" />
+        <entry key="app/src/main/res/drawable-xxhdpi/deselect_item_foreground.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/accept_call_btn_bg.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/bg_gradient.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/chat_bg.xml" value="0.32592592592592595" />
         <entry key="app/src/main/res/drawable/decline_call_btn_bg.xml" value="0.371875" />
+        <entry key="app/src/main/res/drawable/ic_baseline_contacts_24.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/ic_baseline_perm_media.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/ic_baseline_perm_media_24.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.371875" />
@@ -24,6 +26,7 @@
         <entry key="app/src/main/res/drawable/left_message_bg.xml" value="0.290625" />
         <entry key="app/src/main/res/drawable/media_adapter_bg.xml" value="0.32592592592592595" />
         <entry key="app/src/main/res/drawable/right_message_bg.xml" value="0.290625" />
+        <entry key="app/src/main/res/drawable/select_item_foreground.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/send_btn_bg.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/send_layout_bg.xml" value="0.32592592592592595" />
         <entry key="app/src/main/res/drawable/splash_background.xml" value="0.371875" />
@@ -31,10 +34,12 @@
         <entry key="app/src/main/res/layout/activity_auth.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/activity_chat.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_contact_user_list.xml" value="0.35572916666666665" />
+        <entry key="app/src/main/res/layout/activity_create_new_group.xml" value="0.23958333333333334" />
         <entry key="app/src/main/res/layout/activity_incoming_call.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_sample.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/activity_sample2.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/activity_select_group_members.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/activity_splash_screen.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/activity_video_call.xml" value="0.25" />
         <entry key="app/src/main/res/layout/chat_item.xml" value="0.22" />
@@ -46,6 +51,8 @@
         <entry key="app/src/main/res/layout/list_item.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/media_item.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/message_item.xml" value="0.35572916666666665" />
+        <entry key="app/src/main/res/layout/select_member_item.xml" value="0.23958333333333334" />
+        <entry key="app/src/main/res/layout/select_user_item.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/layout/user_contact_list_item.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/menu/activity_chat_menu.xml" value="0.35572916666666665" />
         <entry key="app/src/main/res/menu/menu_main.xml" value="0.35572916666666665" />
