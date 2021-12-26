@@ -80,21 +80,21 @@ public class MainActivity extends AppCompatActivity {
                 }).attach();
 
         //incomingCall listener
-        FirebaseDatabase.getInstance().getReference().child("user").child(authUserId).addValueEventListener(new ValueEventListener() {
+        FirebaseDatabase.getInstance().getReference().child("user").child(authUserId).child("liveCall").addValueEventListener(new ValueEventListener() {
             @SuppressLint("LongLogTag")
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Log.e("call on liveCallDbRef : ", "called here");
-                if (snapshot.child("liveCall").exists()) {
+                if (snapshot.exists()) {
 
-                    if (snapshot.child("liveCall").child("guest").exists()) {
+                    if (snapshot.child("guest").exists()) {
                         Log.e("liveCallDbRef guest exits : ", "called here");
-                        Log.e(" before condition check :", "" + Objects.requireNonNull(snapshot.child("liveCall").getValue()).toString());
+                        Log.e(" before condition check :", "" + Objects.requireNonNull(snapshot.getValue()).toString());
 
 
-                        if (Objects.requireNonNull(snapshot.child("liveCall").child("guest").getValue()).toString().equals("self")) {
+                        if (Objects.requireNonNull(snapshot.child("guest").getValue()).toString().equals("self")) {
                             Log.e(" THE CALL DATA CHANGED :", "" + Objects.requireNonNull(snapshot.getValue()).toString());
-                            incomingCallId = Objects.requireNonNull(snapshot.child("liveCall").child("callId").getValue()).toString();
+                            incomingCallId = Objects.requireNonNull(snapshot.child("callId").getValue()).toString();
                             getCallerName();
                         }
                     }

@@ -23,6 +23,7 @@
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/image_count_bg.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/img_cnt_left_bg.xml" value="0.371875" />
+        <entry key="app/src/main/res/drawable/img_cnt_right_bg.xml" value="0.371875" />
         <entry key="app/src/main/res/drawable/left_message_bg.xml" value="0.290625" />
         <entry key="app/src/main/res/drawable/media_adapter_bg.xml" value="0.32592592592592595" />
         <entry key="app/src/main/res/drawable/right_message_bg.xml" value="0.290625" />

@@ -35,7 +35,7 @@ public class FirstFragment extends Fragment {
     ArrayList<ChatObject> chatList;
     private int position = 0;
     private ArrayList<String> chatMemList = new ArrayList<>();
-    private String chatsName = "", chatsPhone = "";
+    private String chatsName = "", chatsPhone = "", chatsUid = "", authUserNameByOtherUsersContact = "";
     private RecyclerView.Adapter mChatListAdapter;
     private View fragmentView;
 
@@ -81,38 +81,42 @@ public class FirstFragment extends Fragment {
                     Log.e("user chat count : ", "" + dataSnapshot.getChildrenCount());
                     for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                         //only created chat's which marked as true will appear in chat list
+
                         if (childSnapshot.getValue().equals(false)) {
                             Log.e(childSnapshot.getKey(), "skipped from chat list");
                             continue;
                         }
-//                        boolean exists = false;
-//                        for (ChatObject chatObjectIt : chatList) {
-//                            if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
-//                                exists = true;
-//                            }
-//                        }
-//                        if (exists) continue;
+                        boolean exists = false;
+                        for (ChatObject chatObjectIt : chatList) {
+                            if (chatObjectIt.getChatId().equals(childSnapshot.getKey())) {
+                                exists = true;
+                            }
+                        }
+                        if (exists) continue;
 
-                        DatabaseReference chatsUserDB = chatDB.child(Objects.requireNonNull(childSnapshot.getKey()));
-
+                        DatabaseReference chatsUserDB = chatDB.child(Objects.requireNonNull(childSnapshot.getKey())).child("users");
 
                         ChatObject mChat = new ChatObject(childSnapshot.getKey(), "", "");
 
                         chatsUserDB.addValueEventListener(new ValueEventListener() {
 
                             @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            public void onDataChange(@NonNull DataSnapshot users) {
 
-                                if (snapshot.child("users").exists()) {
-                                    Boolean isGroup = (Boolean) snapshot.child("isGroup").getValue();
-                                    if (isGroup) {
-                                        chatsName = Objects.requireNonNull(snapshot.child("name").getValue()).toString();
+                                if (users.exists()) {
+                                    if (users.getChildrenCount() > 2) {
+                                        chatsName = Objects.requireNonNull(childSnapshot.child("groupName").getValue()).toString();
+                                        chatsPhone = "";
+                                        chatsUid = "";
+                                        authUserNameByOtherUsersContact = "";
                                     } else {
-                                        for (DataSnapshot chatSnapshot : snapshot.child("users").getChildren()) {
-                                            if (!chatSnapshot.getKey().equals(authUserUid)) {
-                                                chatMemList.add(chatSnapshot.getKey());
-                                                chatsName = chatSnapshot.child("name").getValue().toString();
-                                                chatsPhone = chatSnapshot.child("phone").getValue().toString();
+                                        for (DataSnapshot chatUserSnapshot : users.getChildren()) {
+                                            authUserNameByOtherUsersContact = Objects.requireNonNull(users.child(authUserUid).child("name").getValue()).toString();
+                                            if (!Objects.equals(chatUserSnapshot.getKey(), authUserUid)) {
+                                                chatMemList.add(chatUserSnapshot.getKey());
+                                                chatsName = chatUserSnapshot.child("name").getValue().toString();
+                                                chatsPhone = chatUserSnapshot.child("phone").getValue().toString();
+                                                chatsUid = chatUserSnapshot.getKey();
 
 
                                             }
@@ -121,6 +125,8 @@ public class FirstFragment extends Fragment {
                                             chatsName = chatsPhone;
                                     }
 
+                                    mChat.setChatsUid(chatsUid);
+                                    mChat.setChatsAuthUserName(authUserNameByOtherUsersContact);
                                     mChat.setName(chatsName);
                                     mChat.setPhone(chatsPhone);
                                     chatList.add(mChat);

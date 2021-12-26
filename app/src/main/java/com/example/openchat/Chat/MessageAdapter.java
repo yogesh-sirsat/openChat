@@ -40,37 +40,50 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         return new MessageViewHolder(layoutView);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
+    @SuppressLint({"UseCompatLoadingForDrawables", "SetTextI18n"})
     @Override
     public void onBindViewHolder(@NonNull final MessageViewHolder holder, final int position) {
+        //otherEnd user message gravity
+        LinearLayout.LayoutParams startGravityParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        startGravityParams.weight = 1.0f;
+        startGravityParams.gravity = Gravity.START;
 
+        //authUser message gravity
+        LinearLayout.LayoutParams endGravityParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        endGravityParams.weight = 1.0f;
+        endGravityParams.gravity = Gravity.END;
 
-        if (mMessageList.get(position).senderId.equals(getAuthUserKey())) {
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.weight = 1.0f;
-            params.gravity = Gravity.END;
+        if (mMessageList.get(position).creatorUid.equals(getAuthUserKey())) {
+            holder.mCreatorLayout.setVisibility(View.GONE);
 
-            holder.mMessage.setBackground(holder.mMessage.getResources().getDrawable(R.drawable.right_message_bg));
-            holder.mMediaLayout.setBackground(holder.mMediaLayout.getResources().getDrawable(R.drawable.right_message_bg));
+            holder.mMessageLayout.setBackground(holder.mMediaLayout.getResources().getDrawable(R.drawable.right_message_bg));
             holder.mPlusImgCnt.setBackground(holder.mPlusImgCnt.getResources().getDrawable(R.drawable.img_cnt_right_bg));
 
-            holder.mMessageLayout.setLayoutParams(params);
-            holder.mMessage.setLayoutParams(params);
-            holder.mTime.setLayoutParams(params);
+            holder.mMessageLayout.setLayoutParams(endGravityParams);
+            holder.mTime.setGravity(Gravity.START);
 
 
         } else {
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.weight = 1.0f;
-            params.gravity = Gravity.START;
 
-            holder.mMessage.setBackground(holder.mMessage.getResources().getDrawable(R.drawable.left_message_bg));
-            holder.mMediaLayout.setBackground(holder.mMediaLayout.getResources().getDrawable(R.drawable.left_message_bg));
+
+            if (!mMessageList.get(position).isGroupMessage || isPrevMessageUser(position)) {
+                holder.mCreatorLayout.setVisibility(View.GONE);
+            } else {
+
+                holder.mCreatorName.setText("~" + mMessageList.get(position).getCreatorName());
+                if (mMessageList.get(position).isCreatorInContact) {
+                    holder.mCreator.setText(mMessageList.get(position).getCreatorNameByAuthUserContact());
+                } else {
+                    holder.mCreator.setText(mMessageList.get(position).getCreatorPhone());
+                }
+            }
+
+            holder.mMessageLayout.setBackground(holder.mMediaLayout.getResources().getDrawable(R.drawable.left_message_bg));
             holder.mPlusImgCnt.setBackground(holder.mPlusImgCnt.getResources().getDrawable(R.drawable.img_cnt_left_bg));
 
-            holder.mMessageLayout.setLayoutParams(params);
-            holder.mMessage.setLayoutParams(params);
-            holder.mTime.setLayoutParams(params);
+
+//            holder.mMessageLayout.setLayoutParams(startGravityParams);
+
 
         }
 
@@ -102,25 +115,35 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     }
 
+    private boolean isPrevMessageUser(int position) {
+        if (position != 0 && mMessageList.get(position).creatorPhone.equals(mMessageList.get(position - 1).creatorPhone)) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public int getItemCount() {
         return mMessageList.size();
     }
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView mMessage, mTime, mPlusImgCnt;
+        TextView mMessage, mTime, mPlusImgCnt, mCreatorName, mCreator;
         SimpleDraweeView mMedia;
-        LinearLayout mMessageLayout;
+        LinearLayout mMessageLayout, mCreatorLayout;
         RelativeLayout mMediaLayout;
 
         MessageViewHolder(View view) {
             super(view);
             mMessage = view.findViewById(R.id.message);
             mMedia = view.findViewById(R.id.media);
+            mCreatorName = view.findViewById(R.id.creator_name);
+            mCreator = view.findViewById(R.id.creator);
             mPlusImgCnt = view.findViewById(R.id.plus_image_cnt);
             mTime = view.findViewById(R.id.time);
             mMessageLayout = view.findViewById(R.id.message_layout);
             mMediaLayout = view.findViewById(R.id.media_layout);
+            mCreatorLayout = view.findViewById(R.id.creator_layout);
         }
     }
 

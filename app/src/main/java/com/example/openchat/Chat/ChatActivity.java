@@ -1,11 +1,15 @@
 package com.example.openchat.Chat;
 
+import static com.example.openchat.User.UserContactList.countryIso;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,10 +26,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openchat.Auth.AuthActivity;
 import com.example.openchat.Call.AudioCallActivity;
 import com.example.openchat.Call.VideoCallActivity;
 import com.example.openchat.MainActivity;
 import com.example.openchat.R;
+import com.example.openchat.User.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -54,20 +60,23 @@ public class ChatActivity extends AppCompatActivity {
     ArrayList<String> mediaIdList = new ArrayList<>();
     ArrayList<String> mediaUriList = new ArrayList<>();
     ArrayList<MessageObject> mMessageList;
+    HashMap<String, String> authUserContacts = new HashMap<>();
 
+    UserProfile authUserProfile;
     DatabaseReference mChatDb, userDbRef;
     EditText mMessage;
     Menu chatMenu;
-    String chatId = "", chatsName = "", authUserUid = "", otherUserUid = "", otherUserName = "", authUserNameByOtherUsersContact = "";
+    String[] permissions = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"};
+    String chatId = "", chatsName = "", authUserUid = "", otherUserUid = "", otherUserName = "", authUserNameByOtherUsersContact = "", otherUserPhone = "";
+
     int totalMediaUploaded = 0;
     int PICK_IMAGE_INTENT = 1;
-    String[] permissions = {"android.permission.CAMERA", "android.permission.RECORD_AUDIO"};
-    boolean perCamera, perRecordAudio, isOtherUserAvailable = false, isGroup;
+    boolean perCamera, perRecordAudio, isOtherUserAvailable = false, isGroup = false;
 
     private RecyclerView.Adapter mChatAdapter, mMediaAdapter;
     private RecyclerView.LayoutManager mChatLayoutManager;
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("LongLogTag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +88,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.e("chat activity : ", "called here");
 
         userDbRef = FirebaseDatabase.getInstance().getReference().child("user");
-        authUserUid = userDbRef.child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
+        authUserUid = FirebaseAuth.getInstance().getUid();
 
 
         // calling the action bar
@@ -88,6 +97,19 @@ public class ChatActivity extends AppCompatActivity {
 
         chatId = getIntent().getExtras().getString("chatId");
         chatsName = getIntent().getExtras().getString("chatsName");
+        otherUserPhone = getIntent().getExtras().getString("chatsPhone");
+        otherUserName = chatsName;
+        otherUserUid = getIntent().getExtras().getString("chatsUid");
+        authUserNameByOtherUsersContact = getIntent().getExtras().getString("chatsAuthUserName");
+
+        if (otherUserUid.isEmpty()) {
+            isGroup = true;
+            getUserContacts();
+            //                    chatMenu.findItem(R.id.audio_call).setVisible(false);
+//                    chatMenu.findItem(R.id.video_call).setVisible(false);
+        } else {
+            isGroup = false;
+        }
 
         assert actionBar != null;
         actionBar.setTitle(chatsName);
@@ -97,34 +119,19 @@ public class ChatActivity extends AppCompatActivity {
 
         mChatDb = FirebaseDatabase.getInstance().getReference().child("chat").child(chatId);
 
+
         mChatDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                isGroup = (Boolean) snapshot.child("isGroup").getValue();
-                if (isGroup) {
-//                    chatMenu.findItem(R.id.audio_call).setVisible(false);
-//                    chatMenu.findItem(R.id.video_call).setVisible(false);
 
-                } else {
+                if (!snapshot.child("isGroup").exists()) {
                     if (snapshot.child("users").exists()) {
                         authUserNameByOtherUsersContact = Objects.requireNonNull(snapshot.child("users").child(authUserUid).child("name").getValue()).toString();
-
-                        for (DataSnapshot childSnapshot : snapshot.child("users").getChildren()) {
-                            if (!Objects.equals(childSnapshot.getKey(), authUserUid)) {
-
-                                otherUserUid = childSnapshot.getKey();
-                                otherUserName = Objects.requireNonNull(childSnapshot.child("name").getValue()).toString();
-                                //setting other user name as title
-
-
-                            }
-                        }
                     }
+
                 }
-
-
             }
 
             @Override
@@ -138,7 +145,6 @@ public class ChatActivity extends AppCompatActivity {
 //        actionBar.setHomeAsUpIndicator(R.drawable.);
 
         // showing the back button in action bar
-        assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         //setting other end user name as title
@@ -156,6 +162,32 @@ public class ChatActivity extends AppCompatActivity {
         getChatMessages();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @SuppressLint("Range")
+    private void getUserContacts() {
+        String ISOPrefix = countryIso(), name = "", phone = "";
+        @SuppressLint("Recycle") Cursor phones = AuthActivity.getAppContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+        while (phones.moveToNext()) {
+            name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            phone = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+            phone = phone.replace(" ", "");
+            phone = phone.replace("-", "");
+            phone = phone.replace("(", "");
+            phone = phone.replace(")", "");
+
+            if (!String.valueOf(phone.charAt(0)).equals("+")) {
+                phone = ISOPrefix + phone;
+            }
+
+            authUserContacts.put(phone, name);
+
+
+        }
+
+    }
+
+
     private void getChatMessages() {
         Log.e("getChatMessages:", "called here");
 
@@ -166,26 +198,45 @@ public class ChatActivity extends AppCompatActivity {
                 Log.e("addChildEventListener:", "called here");
 
                 if (dataSnapshot.exists()) {
-                    String text = "", creatorID = "", timestamp = "";
+                    String text = "", creatorUid = "", creatorName = "", creatorPhone = "", timestamp = "", creatorNameByAuthUserContact = "";
                     ArrayList<String> mediaUrlList = new ArrayList<>();
                     if (dataSnapshot.child("text").getValue() != null) {
                         text = Objects.requireNonNull(dataSnapshot.child("text").getValue()).toString();
                     }
-                    if (dataSnapshot.child("creator").getValue() != null) {
-                        creatorID = Objects.requireNonNull(dataSnapshot.child("creator").getValue()).toString();
+                    if (dataSnapshot.child("creatorUid").getValue() != null) {
+                        creatorUid = Objects.requireNonNull(dataSnapshot.child("creatorUid").getValue()).toString();
 
                     }
+                    if (dataSnapshot.child("creatorName").getValue() != null) {
+                        creatorName = Objects.requireNonNull(dataSnapshot.child("creatorName").getValue()).toString();
+
+                    }
+                    if (dataSnapshot.child("creatorPhone").getValue() != null) {
+                        creatorPhone = Objects.requireNonNull(dataSnapshot.child("creatorPhone").getValue()).toString();
+
+                    }
+
                     if (dataSnapshot.child("media").getChildrenCount() > 0) {
                         for (DataSnapshot mediaSnapshot : dataSnapshot.child("media").getChildren()) {
                             mediaUrlList.add(Objects.requireNonNull(mediaSnapshot.getValue().toString()));
                         }
                     }
 
-                    if (creatorID.length() != 0) {
+                    if (creatorUid.length() != 0) {
                         Date date = new Date(dataSnapshot.child("timestamp").getValue(Long.class));
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("H:m d-M-yy", Locale.getDefault());
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm dd-MM-yy", Locale.getDefault());
                         timestamp = simpleDateFormat.format(date);
-                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), creatorID, text, mediaUrlList, timestamp);
+
+                        Boolean isCreatorInContact = false;
+                        if (authUserContacts.containsKey(creatorPhone)) {
+                            isCreatorInContact = true;
+                            creatorNameByAuthUserContact = authUserContacts.get(creatorPhone);
+
+                        }
+
+                        MessageObject mMessage = new MessageObject(dataSnapshot.getKey(), text, creatorUid, creatorName, creatorPhone,
+                                mediaUrlList, timestamp, isGroup, isCreatorInContact, creatorNameByAuthUserContact);
+
                         mMessageList.add(mMessage);
                         mChatLayoutManager.scrollToPosition(mMessageList.size() - 1);
                         mChatAdapter.notifyDataSetChanged();
@@ -225,7 +276,9 @@ public class ChatActivity extends AppCompatActivity {
 
         final Map newMessageMap = new HashMap<>();
         newMessageMap.put("timestamp", ServerValue.TIMESTAMP);
-        newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
+        newMessageMap.put("creatorUid", UserProfile.getUserId());
+        newMessageMap.put("creatorName", UserProfile.getUserName());
+        newMessageMap.put("creatorPhone", UserProfile.getUserPhone());
 
         if (!mMessage.getText().toString().isEmpty()) {
 
@@ -256,8 +309,10 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         //setting chatId as true as user's started their chat
-        userDbRef.child(authUserUid).child("chat").child(chatId).setValue(true);
-        userDbRef.child(otherUserUid).child("chat").child(chatId).setValue(true);
+        if (!isGroup) {
+            userDbRef.child(authUserUid).child("chat").child(chatId).setValue(true);
+            userDbRef.child(otherUserUid).child("chat").child(chatId).setValue(true);
+        }
 
 
     }

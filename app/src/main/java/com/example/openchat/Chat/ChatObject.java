@@ -1,7 +1,7 @@
 package com.example.openchat.Chat;
 
 public class ChatObject {
-    private String chatId, name, phone;
+    private String chatId, name, phone, chatsUid, chatsAuthUserName;
 
     public ChatObject(String mChadId, String mName, String mPhone) {
         this.chatId = mChadId;
@@ -17,12 +17,28 @@ public class ChatObject {
         return name;
     }
 
-    public void setName(String mName) {
-        this.name = mName;
-    }
-
     public String getPhone() {
         return phone;
+    }
+
+    public String getChatsUid() {
+        return chatsUid;
+    }
+
+    public void setChatsUid(String chatsUid) {
+        this.chatsUid = chatsUid;
+    }
+
+    public String getChatsAuthUserName() {
+        return chatsAuthUserName;
+    }
+
+    public void setChatsAuthUserName(String chatsAuthUserName) {
+        this.chatsAuthUserName = chatsAuthUserName;
+    }
+
+    public void setName(String mName) {
+        this.name = mName;
     }
 
     public void setPhone(String mPhone) {

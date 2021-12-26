@@ -1,9 +1,8 @@
 package com.example.openchat.User;
 
-import static com.example.openchat.SplashScreenActivity.getAuthUserKey;
-
 import androidx.annotation.NonNull;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -15,14 +14,15 @@ import java.util.Objects;
 public class UserProfile {
     public static String UserName = "", UserPhone = "", UserStatus = "", UserId = "";
 
-    public UserProfile(String mUserName, String mUserPhone, String mUserStatus) {
-        this.UserName = mUserName;
-        this.UserPhone = mUserPhone;
-        this.UserStatus = mUserStatus;
+    public UserProfile(String mUserName, String mUserPhone, String mUserStatus, String mUserId) {
+        UserName = mUserName;
+        UserPhone = mUserPhone;
+        UserStatus = mUserStatus;
+        UserId = mUserId;
     }
 
     public static UserProfile getUserProfile() {
-        UserId = getAuthUserKey();
+        UserId = FirebaseAuth.getInstance().getUid();
         DatabaseReference authUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(UserId);
         authUserDB.addValueEventListener(new ValueEventListener() {
             @Override
@@ -38,7 +38,7 @@ public class UserProfile {
 
             }
         });
-        return new UserProfile(UserName, UserPhone, "");
+        return new UserProfile(UserName, UserPhone, "", UserId);
     }
 
     public static String getUserName() {
@@ -51,5 +51,9 @@ public class UserProfile {
 
     public static String getUserStatus() {
         return UserStatus;
+    }
+
+    public static String getUserId() {
+        return UserId;
     }
 }

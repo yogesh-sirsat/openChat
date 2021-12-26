@@ -1,7 +1,5 @@
 package com.example.openchat.Group;
 
-import static com.example.openchat.SplashScreenActivity.getAuthUserKey;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -9,12 +7,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.openchat.MainActivity;
+import com.example.openchat.Chat.ChatActivity;
 import com.example.openchat.R;
 import com.example.openchat.User.ContactUserObject;
 import com.example.openchat.User.UserProfile;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
@@ -53,12 +52,12 @@ public class CreateNewGroupActivity extends AppCompatActivity {
     }
 
     private void CreateNewGroup() {
-        String authUserKey = getAuthUserKey();
+        String authUserKey = FirebaseAuth.getInstance().getUid();
         DatabaseReference userDbRef = FirebaseDatabase.getInstance().getReference().child("user");
         DatabaseReference chatDbRef = FirebaseDatabase.getInstance().getReference().child("chat");
         newGroupChatId = chatDbRef.push().getKey();
-        chatDbRef.child(newGroupChatId).child("isGroup").setValue(true);
         assert newGroupChatId != null;
+        chatDbRef.child(newGroupChatId).child("isGroup").setValue(true);
         DatabaseReference groupChatDbRef = chatDbRef.child(newGroupChatId);
 
         groupChatDbRef.child("name").setValue(groupName);
@@ -68,12 +67,15 @@ public class CreateNewGroupActivity extends AppCompatActivity {
         for (ContactUserObject member : groupMembers) {
             groupChatDbRef.child("users").child(member.getUid()).child("name").setValue(member.getName());
             groupChatDbRef.child("users").child(member.getUid()).child("phone").setValue(member.getPhone());
-            userDbRef.child(member.getUid()).child("chat").child(newGroupChatId).setValue(true);
+            userDbRef.child(member.getUid()).child("chat").child(newGroupChatId).child("isGroup").setValue(true);
+            userDbRef.child(member.getUid()).child("chat").child(newGroupChatId).child("groupName").setValue(groupName);
+
 
         }
         groupChatDbRef.child("users").child(authUserKey).child("name").setValue(UserProfile.getUserName());
         groupChatDbRef.child("users").child(authUserKey).child("phone").setValue(UserProfile.getUserPhone());
-        userDbRef.child(authUserKey).child("chat").child(newGroupChatId).setValue(true);
+        userDbRef.child(authUserKey).child("chat").child(newGroupChatId).child("isGroup").setValue(true);
+        userDbRef.child(authUserKey).child("chat").child(newGroupChatId).child("groupName").setValue(groupName);
 
         openNewGroup();
 
@@ -81,12 +83,16 @@ public class CreateNewGroupActivity extends AppCompatActivity {
     }
 
     private void openNewGroup() {
-        Intent enterInGroup = new Intent(this, MainActivity.class);
+        Intent enterInGroup = new Intent(this, ChatActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString("chatId", newGroupChatId);
         bundle.putString("chatsName", groupName);
+        bundle.putString("chatsPhone", "");
+        bundle.putString("chatsUid", "");
+        bundle.putString("chatsAuthUserName", "");
         enterInGroup.putExtras(bundle);
         startActivity(enterInGroup);
+
         finish();
     }
 }

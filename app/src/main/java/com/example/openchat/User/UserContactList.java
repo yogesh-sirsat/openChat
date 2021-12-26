@@ -42,9 +42,6 @@ public class UserContactList {
 
 //    public static Context context = MainActivity.getAppContext();
 
-    public static void test() {
-        Log.e("text function :", "is called here");
-    }
 
     @SuppressLint("Range")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -157,22 +154,12 @@ public class UserContactList {
                 Log.e("Count ", "" + snapshot.getChildrenCount());
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                     //checking is group before adding to authUserChatDb
-                    chatDbRef.child(Objects.requireNonNull(childSnapshot.getKey())).child("isGroup").addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if (snapshot.exists()) {
-                                Boolean isGroup = (Boolean) snapshot.getValue();
-                                if (!isGroup) {
-                                    mAuthUserChatDB.put(childSnapshot.getKey(), 1);
-                                }
-                            }
-                        }
+                    if (childSnapshot.child("isGroup").exists()) {
+                        continue;
+                    }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
+                    mAuthUserChatDB.put(childSnapshot.getKey(), 1);
 
-                        }
-                    });
                 }
 
                 for (Map.Entry mEle : mAuthUserChatDB.entrySet()) {
@@ -212,6 +199,8 @@ public class UserContactList {
                 }
                 if (!mChatKeyExists) {
                     mChatKey = chatDbRef.push().getKey();
+                    assert mChatKey != null;
+                    chatDbRef.child(mChatKey).child("isGroup").setValue(false);
                     String authUserKey = mUserDbRef.child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
                     String thirdUserKey = mUserDbRef.child(contact.getUid()).getKey();
 

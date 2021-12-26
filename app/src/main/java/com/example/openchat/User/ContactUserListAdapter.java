@@ -32,7 +32,7 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
     ArrayList<ContactUserObject> mContactUserList;
     HashMap<String, Integer> authUserChatDB;
     Boolean chatKeyExists = false;
-    String chatKey;
+    String chatKey, authUserNameByOtherUsersContact = "";
     UserProfile authUserProfile = UserProfile.getUserProfile();
     DatabaseReference userDbRef = FirebaseDatabase.getInstance().getReference().child("user");
     DatabaseReference chatDbRef = FirebaseDatabase.getInstance().getReference().child("chat");
@@ -66,22 +66,11 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                         //checking is group before adding to authUserChatDb
-                        chatDbRef.child(Objects.requireNonNull(childSnapshot.getKey())).child("isGroup").addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if (snapshot.exists()) {
-                                    Boolean isGroup = (Boolean) snapshot.getValue();
-                                    if (!isGroup) {
-                                        authUserChatDB.put(childSnapshot.getKey(), 1);
-                                    }
-                                }
-                            }
+                        if (childSnapshot.child("isGroup").exists()) {
+                            continue;
+                        }
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        authUserChatDB.put(childSnapshot.getKey(), 1);
                     }
 
                     for (Map.Entry mEle : authUserChatDB.entrySet()) {
@@ -102,6 +91,7 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
 
             DatabaseReference thirdUserChat = userDbRef.child(mContactUserList.get(position).getUid()).child("chat");
 
+
             thirdUserChat.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -117,6 +107,7 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
                     }
                     if (!chatKeyExists) {
                         chatKey = chatDbRef.push().getKey();
+                        assert chatKey != null;
                         chatDbRef.child(chatKey).child("isGroup").setValue(false);
                         String authUserKey = userDbRef.child(Objects.requireNonNull(FirebaseAuth.getInstance().getUid())).getKey();
                         String thirdUserKey = userDbRef.child(mContactUserList.get(position).getUid()).getKey();
@@ -139,6 +130,9 @@ public class ContactUserListAdapter extends RecyclerView.Adapter<ContactUserList
                     Bundle bundle = new Bundle();
                     bundle.putString("chatId", chatKey);
                     bundle.putString("chatsName", mContactUserList.get(position).getName());
+                    bundle.putString("chatsPhone", mContactUserList.get(position).getPhone());
+                    bundle.putString("chatsUid", mContactUserList.get(position).getUid());
+                    bundle.putString("chatsAuthUserName", "");
                     intent.putExtras(bundle);
                     v.getContext().startActivity(intent);
                     return;
