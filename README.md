@@ -1,4 +1,4 @@
 # openChat
 WhatsApp clone
 
-[Screenshots](https://drive.google.com/drive/folders/1ZHOLGh3e79STiaaS1hbXQbBnjy-NdZhw?usp=sharing)
+[Screenshots](https://1drv.ms/f/s!AljPuC-a7vuNrktTXB-qM7fc__E3?e=5Bz6ax)
